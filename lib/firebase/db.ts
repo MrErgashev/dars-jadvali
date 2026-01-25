@@ -79,26 +79,37 @@ export async function getLesson(
 }
 
 // Yangi dars qo'shish yoki mavjudini yangilash
-export async function saveLesson(lesson: Omit<Lesson, 'id' | 'updatedAt'>): Promise<string> {
+export async function saveLesson(lesson: Omit<Lesson, 'updatedAt'>): Promise<string> {
   const firestore = checkFirebase();
 
-  // Avval mavjud darsni tekshirish
-  const existing = await getLesson(lesson.day, lesson.shift, lesson.period);
+  const { id, ...lessonFields } = lesson;
 
   const lessonData = {
-    ...lesson,
+    ...lessonFields,
     updatedAt: Timestamp.now(),
   };
 
+  if (id) {
+    // Aniq darsni ID orqali yangilash
+    const existingAtTime = await getLesson(lesson.day, lesson.shift, lesson.period);
+    if (existingAtTime?.id && existingAtTime.id !== id) {
+      throw new Error("Tanlangan vaqtda boshqa dars mavjud");
+    }
+
+    await updateDoc(doc(firestore, SCHEDULES_COLLECTION, id), lessonData);
+    return id;
+  }
+
+  // Avval mavjud darsni vaqt bo'yicha tekshirish
+  const existing = await getLesson(lesson.day, lesson.shift, lesson.period);
   if (existing?.id) {
-    // Mavjud darsni yangilash
     await updateDoc(doc(firestore, SCHEDULES_COLLECTION, existing.id), lessonData);
     return existing.id;
-  } else {
-    // Yangi dars qo'shish
-    const docRef = await addDoc(collection(firestore, SCHEDULES_COLLECTION), lessonData);
-    return docRef.id;
   }
+
+  // Yangi dars qo'shish
+  const docRef = await addDoc(collection(firestore, SCHEDULES_COLLECTION), lessonData);
+  return docRef.id;
 }
 
 // Darsni o'chirish
