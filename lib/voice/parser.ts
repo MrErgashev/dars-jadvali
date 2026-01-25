@@ -1,0 +1,181 @@
+import { Day, Shift, LessonType, ParsedVoiceCommand } from '../types';
+import { DAY_NAMES, SHIFT_NAMES, LESSON_TYPE_NAMES } from '../constants';
+
+/**
+ * O'zbek tilida gapirilgan matnni tahlil qilib, dars ma'lumotlarini ajratib olish
+ *
+ * Misol: "Dushanba kunduzgi 1-para Mediasavodxonlik JM403 JM403-JM405 Karimov Ma'ruza"
+ */
+export function parseVoiceCommand(text: string): ParsedVoiceCommand {
+  const lowerText = text.toLowerCase().trim();
+  const words = lowerText.split(/\s+/);
+
+  const result: ParsedVoiceCommand = {
+    isComplete: false,
+    missingFields: [],
+  };
+
+  // 1. Kunni topish
+  for (const [day, aliases] of Object.entries(DAY_NAMES)) {
+    if (aliases.some((alias) => lowerText.includes(alias))) {
+      result.day = day as Day;
+      break;
+    }
+  }
+
+  // 2. Bo'limni topish
+  for (const [shift, aliases] of Object.entries(SHIFT_NAMES)) {
+    if (aliases.some((alias) => lowerText.includes(alias))) {
+      result.shift = shift as Shift;
+      break;
+    }
+  }
+
+  // 3. Para raqamini topish
+  const paraMatch = lowerText.match(/(\d+)\s*[-\s]?\s*para/i);
+  if (paraMatch) {
+    result.period = parseInt(paraMatch[1]);
+  } else {
+    // "birinchi", "ikkinchi", "uchinchi" so'zlarini tekshirish
+    if (lowerText.includes('birinchi')) result.period = 1;
+    else if (lowerText.includes('ikkinchi')) result.period = 2;
+    else if (lowerText.includes('uchinchi')) result.period = 3;
+  }
+
+  // 4. Dars turini topish
+  for (const [lessonType, aliases] of Object.entries(LESSON_TYPE_NAMES)) {
+    if (aliases.some((alias) => lowerText.includes(alias))) {
+      result.type = lessonType as LessonType;
+      break;
+    }
+  }
+
+  // 5. Xona raqamini topish (JM403, A101, B205 kabi)
+  const roomMatch = text.match(/\b([A-Za-z]{1,3}\d{3}[A-Za-z]?)\b/);
+  if (roomMatch) {
+    result.room = roomMatch[1].toUpperCase();
+  }
+
+  // 6. Guruhlarni topish (xona bilan bir xil format, lekin birinchisidan keyin)
+  const groupMatches = text.match(/\b([A-Za-z]{2,3}\d{3})\b/g);
+  if (groupMatches && groupMatches.length > 0) {
+    // Agar xona topilgan bo'lsa, uni guruhlar ro'yxatidan olib tashlash
+    const groups = groupMatches
+      .map((g) => g.toUpperCase())
+      .filter((g) => g !== result.room);
+
+    if (groups.length > 0) {
+      result.groups = [...new Set(groups)]; // Takrorlanishlarni olib tashlash
+    }
+  }
+
+  // 7. O'qituvchi ismini topish
+  // O'qituvchi ismi odatda oxirgi so'zlar orasida bo'ladi
+  // Kun, bo'lim, para, xona, guruh va turni olib tashlagan holda
+  const knownPatterns = [
+    ...Object.values(DAY_NAMES).flat(),
+    ...Object.values(SHIFT_NAMES).flat(),
+    ...Object.values(LESSON_TYPE_NAMES).flat(),
+    'para',
+    'paraga',
+    'birinchi',
+    'ikkinchi',
+    'uchinchi',
+  ];
+
+  // Fan nomi va o'qituvchi ismini ajratish
+  // Odatda: [kun] [bo'lim] [para] [fan nomi] [xona] [guruhlar] [o'qituvchi] [turi]
+  const cleanedWords = words.filter((word) => {
+    // Raqamli patternlarni o'chirish
+    if (/^\d+[-\s]?para$/i.test(word)) return false;
+    if (/^[a-z]{1,3}\d{3}[a-z]?$/i.test(word)) return false;
+    if (knownPatterns.includes(word)) return false;
+    return true;
+  });
+
+  // Fan nomi va o'qituvchi ismini ajratish
+  // Odatda o'qituvchi ismi oxirida (tur so'zidan oldin) keladi
+  if (cleanedWords.length > 0) {
+    // Agar 2 ta yoki undan ko'p so'z qolgan bo'lsa
+    if (cleanedWords.length >= 2) {
+      // Oxirgi so'z - o'qituvchi ismi bo'lishi mumkin
+      const possibleTeacher = cleanedWords[cleanedWords.length - 1];
+      // Boshqa so'zlar - fan nomi
+      const possibleSubject = cleanedWords.slice(0, -1).join(' ');
+
+      // O'qituvchi ismini capitalize qilish
+      result.teacher = capitalizeWords(possibleTeacher);
+      result.subject = capitalizeWords(possibleSubject);
+    } else {
+      // Faqat bitta so'z - fan nomi
+      result.subject = capitalizeWords(cleanedWords[0]);
+    }
+  }
+
+  // Qaysi maydonlar yetishmayotganini aniqlash
+  if (!result.day) result.missingFields.push('Kun');
+  if (!result.shift) result.missingFields.push("Bo'lim");
+  if (!result.period) result.missingFields.push('Para');
+  if (!result.subject) result.missingFields.push('Fan nomi');
+  if (!result.room) result.missingFields.push('Xona');
+  if (!result.groups || result.groups.length === 0) result.missingFields.push('Guruhlar');
+  if (!result.teacher) result.missingFields.push("O'qituvchi");
+  if (!result.type) result.missingFields.push('Dars turi');
+
+  result.isComplete = result.missingFields.length === 0;
+
+  return result;
+}
+
+/**
+ * Har bir so'zni kapitalizatsiya qilish
+ */
+function capitalizeWords(text: string): string {
+  return text
+    .split(' ')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+/**
+ * Tahlil natijasini inson o'qiy oladigan formatga o'tkazish
+ */
+export function formatParsedResult(parsed: ParsedVoiceCommand): string {
+  const lines: string[] = [];
+
+  if (parsed.day) {
+    const dayLabel = parsed.day.charAt(0).toUpperCase() + parsed.day.slice(1);
+    lines.push(`Kun: ${dayLabel}`);
+  }
+
+  if (parsed.shift) {
+    const shiftLabel = parsed.shift.charAt(0).toUpperCase() + parsed.shift.slice(1);
+    lines.push(`Bo'lim: ${shiftLabel}`);
+  }
+
+  if (parsed.period) {
+    lines.push(`Para: ${parsed.period}`);
+  }
+
+  if (parsed.subject) {
+    lines.push(`Fan: ${parsed.subject}`);
+  }
+
+  if (parsed.room) {
+    lines.push(`Xona: ${parsed.room}`);
+  }
+
+  if (parsed.groups && parsed.groups.length > 0) {
+    lines.push(`Guruhlar: ${parsed.groups.join(', ')}`);
+  }
+
+  if (parsed.teacher) {
+    lines.push(`O'qituvchi: ${parsed.teacher}`);
+  }
+
+  if (parsed.type) {
+    lines.push(`Turi: ${parsed.type}`);
+  }
+
+  return lines.join('\n');
+}

@@ -1,26 +1,321 @@
 @import "tailwindcss";
 
+/* ===== CSS O'ZGARUVCHILAR ===== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Light Mode ranglar */
+  --background: #f0f4f8;
+  --background-secondary: #ffffff;
+  --foreground: #1a1a2e;
+  --foreground-secondary: #4a4a6a;
+
+  /* Aksentlar */
+  --accent-primary: #667eea;
+  --accent-secondary: #764ba2;
+  --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+
+  /* Neomorphism */
+  --neo-shadow-light: -8px -8px 20px rgba(255, 255, 255, 0.8);
+  --neo-shadow-dark: 8px 8px 20px rgba(174, 174, 192, 0.4);
+  --neo-inset-light: inset -3px -3px 7px rgba(255, 255, 255, 0.8);
+  --neo-inset-dark: inset 3px 3px 7px rgba(174, 174, 192, 0.3);
+
+  /* Bo'limlar ranglari */
+  --shift-kunduzgi: #10b981;
+  --shift-sirtqi: #f59e0b;
+  --shift-kechki: #8b5cf6;
+
+  /* Statuslar */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --error: #ef4444;
+  --info: #3b82f6;
 }
 
+/* Dark Mode */
+.dark {
+  --background: #0f0f23;
+  --background-secondary: #1a1a2e;
+  --foreground: #e4e4f1;
+  --foreground-secondary: #a0a0b8;
+
+  /* Aksentlar */
+  --accent-primary: #818cf8;
+  --accent-secondary: #a78bfa;
+  --accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+
+  /* Glassmorphism (dark) */
+  --glass-bg: rgba(26, 26, 46, 0.8);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+
+  /* Neomorphism (dark) */
+  --neo-shadow-light: -8px -8px 20px rgba(40, 40, 70, 0.5);
+  --neo-shadow-dark: 8px 8px 20px rgba(0, 0, 0, 0.5);
+  --neo-inset-light: inset -3px -3px 7px rgba(40, 40, 70, 0.5);
+  --neo-inset-dark: inset 3px 3px 7px rgba(0, 0, 0, 0.4);
+}
+
+/* ===== TAILWIND THEME ===== */
 @theme inline {
   --color-background: var(--background);
+  --color-background-secondary: var(--background-secondary);
   --color-foreground: var(--foreground);
+  --color-foreground-secondary: var(--foreground-secondary);
+  --color-accent-primary: var(--accent-primary);
+  --color-accent-secondary: var(--accent-secondary);
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ===== ASOSIY STILLAR ===== */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ===== GLASSMORPHISM UTILITIES ===== */
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.glass-subtle {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+}
+
+/* ===== NEOMORPHISM UTILITIES ===== */
+.neo {
+  background: var(--background-secondary);
+  box-shadow: var(--neo-shadow-light), var(--neo-shadow-dark);
+  border-radius: 16px;
+}
+
+.neo-inset {
+  background: var(--background-secondary);
+  box-shadow: var(--neo-inset-light), var(--neo-inset-dark);
+  border-radius: 12px;
+}
+
+.neo-button {
+  background: var(--background-secondary);
+  box-shadow: var(--neo-shadow-light), var(--neo-shadow-dark);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.neo-button:hover {
+  box-shadow: var(--neo-shadow-light), var(--neo-shadow-dark),
+              0 0 20px rgba(102, 126, 234, 0.3);
+}
+
+.neo-button:active {
+  box-shadow: var(--neo-inset-light), var(--neo-inset-dark);
+}
+
+/* ===== GRADIENT UTILITIES ===== */
+.gradient-primary {
+  background: var(--accent-gradient);
+}
+
+.gradient-text {
+  background: var(--accent-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ===== BO'LIM RANGLARI ===== */
+.shift-kunduzgi {
+  --shift-color: var(--shift-kunduzgi);
+}
+
+.shift-sirtqi {
+  --shift-color: var(--shift-sirtqi);
+}
+
+.shift-kechki {
+  --shift-color: var(--shift-kechki);
+}
+
+.shift-badge {
+  background: color-mix(in srgb, var(--shift-color) 15%, transparent);
+  color: var(--shift-color);
+  border: 1px solid color-mix(in srgb, var(--shift-color) 30%, transparent);
+}
+
+/* ===== ANIMATSIYALAR ===== */
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(102, 126, 234, 0.8);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--foreground-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-primary);
+}
+
+/* ===== JADVAL GRID ===== */
+.schedule-grid {
+  display: grid;
+  grid-template-columns: auto repeat(5, 1fr);
+  gap: 8px;
+}
+
+@media (max-width: 1024px) {
+  .schedule-grid {
+    grid-template-columns: auto repeat(5, minmax(140px, 1fr));
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 640px) {
+  .schedule-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* ===== DARS KARTOCHKASI ===== */
+.lesson-card {
+  transition: all 0.3s ease;
+}
+
+.lesson-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--glass-shadow), 0 12px 40px rgba(102, 126, 234, 0.2);
+}
+
+/* ===== FORM ELEMENTLARI ===== */
+.input-glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.input-glass:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.input-glass::placeholder {
+  color: var(--foreground-secondary);
+}
+
+/* ===== MIKROFON TUGMASI ===== */
+.mic-button {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.mic-button.recording {
+  animation: pulse-glow 1s ease-in-out infinite;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* ===== MOBILE NAVIGATION ===== */
+.mobile-day-selector {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .mobile-day-selector {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 8px 0;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .mobile-day-selector::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ===== LOADING SKELETON ===== */
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--background-secondary) 25%,
+    color-mix(in srgb, var(--background-secondary) 50%, var(--foreground-secondary)) 50%,
+    var(--background-secondary) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
