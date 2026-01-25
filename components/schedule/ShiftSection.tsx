@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { Lesson, Day, Shift, TimeSlot } from '@/lib/types';
 import { DAYS } from '@/lib/constants';
 import LessonCard from './LessonCard';
@@ -69,12 +70,9 @@ export default function ShiftSection({
 
           {/* Har bir para uchun row */}
           {times.map((time) => (
-            <>
+            <React.Fragment key={`row-${time.period}`}>
               {/* Vaqt cell */}
-              <div
-                key={`time-${time.period}`}
-                className="flex flex-col items-center justify-center py-2 px-3"
-              >
+              <div className="flex flex-col items-center justify-center py-2 px-3">
                 <span className="text-xs text-[var(--foreground-secondary)]">
                   {time.period}-para
                 </span>
@@ -89,7 +87,7 @@ export default function ShiftSection({
                   <LessonCard lesson={getLesson(day.value, time.period)} />
                 </div>
               ))}
-            </>
+            </React.Fragment>
           ))}
         </div>
       </div>

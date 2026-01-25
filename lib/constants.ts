@@ -42,28 +42,28 @@ export const SHIFTS: ShiftSchedule[] = [
 // Dars turlari
 export const LESSON_TYPES: LessonType[] = ["Ma'ruza", 'Amaliy', 'Seminar', 'Laboratoriya'];
 
-// Bo'lim nomlari (parser uchun)
+// Bo'lim nomlari (parser uchun) - O'zbek + Rus
 export const SHIFT_NAMES: Record<Shift, string[]> = {
-  kunduzgi: ['kunduzgi', 'kunduzi', 'ertalab'],
-  sirtqi: ['sirtqi', 'tushdan keyin', 'tushlik'],
-  kechki: ['kechki', 'kechqurun', 'oqshom'],
+  kunduzgi: ['kunduzgi', 'kunduzi', 'ertalab', 'дневной', 'дневное', 'утро', 'утренний'],
+  sirtqi: ['sirtqi', 'tushdan keyin', 'tushlik', 'заочный', 'заочное', 'дневной после обеда'],
+  kechki: ['kechki', 'kechqurun', 'oqshom', 'вечерний', 'вечернее', 'вечер'],
 };
 
-// Kun nomlari (parser uchun)
+// Kun nomlari (parser uchun) - O'zbek + Rus
 export const DAY_NAMES: Record<Day, string[]> = {
-  dushanba: ['dushanba', 'dushanbaga'],
-  seshanba: ['seshanba', 'seshanbaga'],
-  chorshanba: ['chorshanba', 'chorshanbaga'],
-  payshanba: ['payshanba', 'payshanbaga'],
-  juma: ['juma', 'jumaga'],
+  dushanba: ['dushanba', 'dushanbaga', 'понедельник', 'monday'],
+  seshanba: ['seshanba', 'seshanbaga', 'вторник', 'tuesday'],
+  chorshanba: ['chorshanba', 'chorshanbaga', 'среда', 'wednesday'],
+  payshanba: ['payshanba', 'payshanbaga', 'четверг', 'thursday'],
+  juma: ['juma', 'jumaga', 'пятница', 'friday'],
 };
 
-// Dars turi nomlari (parser uchun)
+// Dars turi nomlari (parser uchun) - O'zbek + Rus
 export const LESSON_TYPE_NAMES: Record<LessonType, string[]> = {
-  "Ma'ruza": ["ma'ruza", 'maruza', 'leksiya'],
-  Amaliy: ['amaliy', 'amaliyot', 'praktika'],
-  Seminar: ['seminar', 'seminari'],
-  Laboratoriya: ['laboratoriya', 'lab', 'labaratoriya'],
+  "Ma'ruza": ["ma'ruza", 'maruza', 'leksiya', 'лекция', 'lecture'],
+  Amaliy: ['amaliy', 'amaliyot', 'praktika', 'практика', 'практический', 'practical'],
+  Seminar: ['seminar', 'seminari', 'семинар', 'seminar'],
+  Laboratoriya: ['laboratoriya', 'lab', 'labaratoriya', 'лаборатория', 'лабораторная', 'laboratory'],
 };
 
 // Para raqamlari

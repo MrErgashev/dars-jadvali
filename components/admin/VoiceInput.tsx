@@ -21,6 +21,7 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedLang, setSelectedLang] = useState('ru-RU');
 
   // Browser support check
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
     setParsedResult(null);
 
     const started = speechRecognition.start({
-      language: 'uz-UZ', // O'zbek tili
+      language: selectedLang, // Tanlangan til
       continuous: false,
       interimResults: true,
       onStart: () => {
@@ -150,6 +151,40 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
         Ovozli kiritish
       </h2>
 
+      {/* Til tanlash */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setSelectedLang('ru-RU')}
+          className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            selectedLang === 'ru-RU'
+              ? 'gradient-primary text-white'
+              : 'neo-button text-[var(--foreground)]'
+          }`}
+        >
+          Ruscha (tavsiya)
+        </button>
+        <button
+          onClick={() => setSelectedLang('uz-UZ')}
+          className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            selectedLang === 'uz-UZ'
+              ? 'gradient-primary text-white'
+              : 'neo-button text-[var(--foreground)]'
+          }`}
+        >
+          O'zbekcha
+        </button>
+        <button
+          onClick={() => setSelectedLang('en-US')}
+          className={`flex-1 py-2 px-4 rounded-xl text-sm font-medium transition-all ${
+            selectedLang === 'en-US'
+              ? 'gradient-primary text-white'
+              : 'neo-button text-[var(--foreground)]'
+          }`}
+        >
+          Inglizcha
+        </button>
+      </div>
+
       {/* Instructions */}
       <Card variant="flat" className="p-4 mb-6">
         <h3 className="font-medium text-[var(--foreground)] mb-2">
@@ -160,6 +195,9 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
         </p>
         <p className="text-sm text-[var(--accent-primary)]">
           Misol: "Dushanba kunduzgi 1-para Mediasavodxonlik JM403 JM403 JM405 Karimov Ma'ruza"
+        </p>
+        <p className="text-xs text-[var(--foreground-secondary)] mt-2">
+          * Telefonda Chrome brauzeridan foydalaning. Safari qo'llab-quvvatlamaydi.
         </p>
       </Card>
 

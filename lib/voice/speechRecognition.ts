@@ -132,13 +132,13 @@ class SpeechRecognitionService {
         let errorMessage = 'Ovozni tanib olishda xatolik';
         switch (event.error) {
           case 'no-speech':
-            errorMessage = 'Ovoz eshitilmadi. Qayta urinib ko\'ring.';
+            errorMessage = 'Ovoz eshitilmadi. Mikrofonga yaqinroq gapiring va qayta urinib ko\'ring.';
             break;
           case 'audio-capture':
             errorMessage = 'Mikrofon topilmadi. Mikrofon ulanganligini tekshiring.';
             break;
           case 'not-allowed':
-            errorMessage = 'Mikrofonga ruxsat berilmagan. Brauzer sozlamalarini tekshiring.';
+            errorMessage = 'Mikrofonga ruxsat berilmagan. Brauzer sozlamalaridan mikrofonga ruxsat bering.';
             break;
           case 'network':
             errorMessage = 'Internet bilan muammo. Internetga ulanganligingizni tekshiring.';
@@ -146,8 +146,14 @@ class SpeechRecognitionService {
           case 'aborted':
             errorMessage = 'Ovozni tanib olish to\'xtatildi.';
             break;
+          case 'service-not-allowed':
+            errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning yoki Chrome brauzerini sinab ko\'ring.';
+            break;
+          case 'language-not-supported':
+            errorMessage = 'O\'zbek tili qo\'llab-quvvatlanmaydi. Ruscha yoki inglizcha gapiring.';
+            break;
           default:
-            errorMessage = `Xatolik: ${event.error}`;
+            errorMessage = `Xatolik: ${event.error}. Chrome brauzerida sinab ko'ring.`;
         }
 
         options.onError?.(errorMessage);

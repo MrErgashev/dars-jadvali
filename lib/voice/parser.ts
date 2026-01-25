@@ -31,15 +31,15 @@ export function parseVoiceCommand(text: string): ParsedVoiceCommand {
     }
   }
 
-  // 3. Para raqamini topish
-  const paraMatch = lowerText.match(/(\d+)\s*[-\s]?\s*para/i);
+  // 3. Para raqamini topish (O'zbek + Rus + English)
+  const paraMatch = lowerText.match(/(\d+)\s*[-\s]?\s*(para|пара|pair)/i);
   if (paraMatch) {
     result.period = parseInt(paraMatch[1]);
   } else {
-    // "birinchi", "ikkinchi", "uchinchi" so'zlarini tekshirish
-    if (lowerText.includes('birinchi')) result.period = 1;
-    else if (lowerText.includes('ikkinchi')) result.period = 2;
-    else if (lowerText.includes('uchinchi')) result.period = 3;
+    // O'zbekcha, Ruscha, Inglizcha raqamlar
+    if (lowerText.includes('birinchi') || lowerText.includes('первая') || lowerText.includes('первый') || lowerText.includes('first')) result.period = 1;
+    else if (lowerText.includes('ikkinchi') || lowerText.includes('вторая') || lowerText.includes('второй') || lowerText.includes('second')) result.period = 2;
+    else if (lowerText.includes('uchinchi') || lowerText.includes('третья') || lowerText.includes('третий') || lowerText.includes('third')) result.period = 3;
   }
 
   // 4. Dars turini topish
@@ -76,11 +76,10 @@ export function parseVoiceCommand(text: string): ParsedVoiceCommand {
     ...Object.values(DAY_NAMES).flat(),
     ...Object.values(SHIFT_NAMES).flat(),
     ...Object.values(LESSON_TYPE_NAMES).flat(),
-    'para',
-    'paraga',
-    'birinchi',
-    'ikkinchi',
-    'uchinchi',
+    'para', 'paraga', 'пара',
+    'birinchi', 'ikkinchi', 'uchinchi',
+    'первая', 'вторая', 'третья', 'первый', 'второй', 'третий',
+    'first', 'second', 'third',
   ];
 
   // Fan nomi va o'qituvchi ismini ajratish
