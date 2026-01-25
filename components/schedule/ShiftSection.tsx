@@ -11,6 +11,7 @@ interface ShiftSectionProps {
   times: TimeSlot[];
   lessons: Lesson[];
   selectedDay?: Day; // Mobile uchun
+  onUpdate?: () => void; // Admin edit uchun
 }
 
 export default function ShiftSection({
@@ -19,6 +20,7 @@ export default function ShiftSection({
   times,
   lessons,
   selectedDay,
+  onUpdate,
 }: ShiftSectionProps) {
   // Aniq kun va vaqt uchun darsni topish
   const getLesson = (day: Day, period: number): Lesson | null => {
@@ -94,7 +96,7 @@ export default function ShiftSection({
               {/* Har bir kun uchun dars */}
               {DAYS.map((day) => (
                 <div key={`${day.value}-${time.period}`}>
-                  <LessonCard lesson={getLesson(day.value, time.period)} />
+                  <LessonCard lesson={getLesson(day.value, time.period)} onUpdate={onUpdate} />
                 </div>
               ))}
             </React.Fragment>
@@ -121,7 +123,7 @@ export default function ShiftSection({
               </div>
               {/* Dars kartochkasi */}
               <div className="flex-1">
-                <LessonCard lesson={lesson} isEmpty={!selectedDay} />
+                <LessonCard lesson={lesson} isEmpty={!selectedDay} onUpdate={onUpdate} />
               </div>
             </div>
           );

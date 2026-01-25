@@ -5,7 +5,7 @@ import ScheduleGrid from '@/components/schedule/ScheduleGrid';
 import { useSchedule } from '@/hooks/useSchedule';
 
 export default function Home() {
-  const { lessons, loading, error } = useSchedule();
+  const { lessons, loading, error, refresh } = useSchedule();
 
   return (
     <div className="min-h-screen">
@@ -36,7 +36,7 @@ export default function Home() {
         )}
 
         {/* Jadval */}
-        <ScheduleGrid lessons={lessons} isLoading={loading} />
+        <ScheduleGrid lessons={lessons} isLoading={loading} onUpdate={refresh} />
 
         {/* Bo'sh jadval xabari */}
         {!loading && lessons.length === 0 && (

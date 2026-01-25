@@ -8,9 +8,10 @@ import ShiftSection from './ShiftSection';
 interface ScheduleGridProps {
   lessons: Lesson[];
   isLoading?: boolean;
+  onUpdate?: () => void;
 }
 
-export default function ScheduleGrid({ lessons, isLoading }: ScheduleGridProps) {
+export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleGridProps) {
   const [selectedDay, setSelectedDay] = useState<Day>('dushanba');
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
 
@@ -128,6 +129,7 @@ export default function ScheduleGrid({ lessons, isLoading }: ScheduleGridProps) 
           times={currentShiftData.times}
           lessons={lessons}
           selectedDay={selectedDay}
+          onUpdate={onUpdate}
         />
       )}
     </div>
