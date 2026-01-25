@@ -36,28 +36,33 @@
   --info: #3b82f6;
 }
 
-/* Dark Mode */
+/* Dark Mode - Erkakcha ko'k/qora tonlar */
 .dark {
-  --background: #0f0f23;
-  --background-secondary: #1a1a2e;
-  --foreground: #e4e4f1;
-  --foreground-secondary: #a0a0b8;
+  --background: #0a0e17;
+  --background-secondary: #111827;
+  --foreground: #f1f5f9;
+  --foreground-secondary: #94a3b8;
 
-  /* Aksentlar */
-  --accent-primary: #818cf8;
-  --accent-secondary: #a78bfa;
-  --accent-gradient: linear-gradient(135deg, #818cf8 0%, #a78bfa 100%);
+  /* Aksentlar - Ko'k tonlar */
+  --accent-primary: #3b82f6;
+  --accent-secondary: #06b6d4;
+  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
 
   /* Glassmorphism (dark) */
-  --glass-bg: rgba(26, 26, 46, 0.8);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --glass-bg: rgba(17, 24, 39, 0.85);
+  --glass-border: rgba(59, 130, 246, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
 
   /* Neomorphism (dark) */
-  --neo-shadow-light: -8px -8px 20px rgba(40, 40, 70, 0.5);
-  --neo-shadow-dark: 8px 8px 20px rgba(0, 0, 0, 0.5);
-  --neo-inset-light: inset -3px -3px 7px rgba(40, 40, 70, 0.5);
-  --neo-inset-dark: inset 3px 3px 7px rgba(0, 0, 0, 0.4);
+  --neo-shadow-light: -6px -6px 16px rgba(30, 41, 59, 0.5);
+  --neo-shadow-dark: 6px 6px 16px rgba(0, 0, 0, 0.6);
+  --neo-inset-light: inset -3px -3px 7px rgba(30, 41, 59, 0.5);
+  --neo-inset-dark: inset 3px 3px 7px rgba(0, 0, 0, 0.5);
+
+  /* Bo'limlar ranglari */
+  --shift-kunduzgi: #22c55e;
+  --shift-sirtqi: #f59e0b;
+  --shift-kechki: #a855f7;
 }
 
 /* ===== TAILWIND THEME ===== */

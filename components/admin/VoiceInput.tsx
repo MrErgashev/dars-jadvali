@@ -23,11 +23,9 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
-  // Browser support check
+  // Browser support check - barcha qurilmalarda sinab ko'ramiz
   useEffect(() => {
-    // iPhone/iPad da Web Speech API ishlamaydi
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    setIsSupported(!isIOS && speechRecognition.isSupported());
+    setIsSupported(speechRecognition.isSupported());
   }, []);
 
   const startListening = () => {
@@ -135,7 +133,7 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
   return (
     <div>
       <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
-        Tez kiritish
+        Tez kiritish (Ovoz / Matn)
       </h2>
 
       {/* Instructions */}
