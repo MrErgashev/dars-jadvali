@@ -13,21 +13,38 @@ interface ScheduleGridProps {
 
 export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleGridProps) {
   const [selectedDay, setSelectedDay] = useState<Day>('dushanba');
+  const [todayDay, setTodayDay] = useState<Day | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
 
   // Bugungi kunni topish va tanlash
   useEffect(() => {
-    const today = new Date().getDay();
-    const dayMap: Record<number, Day> = {
-      1: 'dushanba',
-      2: 'seshanba',
-      3: 'chorshanba',
-      4: 'payshanba',
-      5: 'juma',
+    const getTodayDay = (): Day | null => {
+      const today = new Date().getDay();
+      const dayMap: Record<number, Day> = {
+        1: 'dushanba',
+        2: 'seshanba',
+        3: 'chorshanba',
+        4: 'payshanba',
+        5: 'juma',
+      };
+      return dayMap[today] ?? null;
     };
-    if (dayMap[today]) {
-      setSelectedDay(dayMap[today]);
-    }
+
+    const timeoutId = window.setTimeout(() => {
+      const initialToday = getTodayDay();
+      setTodayDay(initialToday);
+      if (initialToday) setSelectedDay(initialToday);
+    }, 0);
+
+    // Kunni avtomatik yangilash (tungi 00:00 dan keyin)
+    const intervalId = window.setInterval(() => {
+      setTodayDay(getTodayDay());
+    }, 60 * 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
   }, []);
 
   if (isLoading) {
@@ -129,6 +146,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
           times={currentShiftData.times}
           lessons={lessons}
           selectedDay={selectedDay}
+          todayDay={todayDay}
           onUpdate={onUpdate}
         />
       )}

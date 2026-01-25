@@ -1,11 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import Header from '@/components/layout/Header';
+import VoiceInput from '@/components/admin/VoiceInput';
 import ScheduleGrid from '@/components/schedule/ScheduleGrid';
+import Button from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
+import { useAuth } from '@/context/AuthContext';
 import { useSchedule } from '@/hooks/useSchedule';
 
 export default function Home() {
   const { lessons, loading, error, refresh } = useSchedule();
+  const { user } = useAuth();
+  const isAdmin = !!user;
+  const [voiceOpen, setVoiceOpen] = useState(false);
 
   return (
     <div className="min-h-screen">
@@ -33,6 +41,56 @@ export default function Home() {
               <span>{error}</span>
             </div>
           </div>
+        )}
+
+        {/* Admin: Ovoz bilan tez kiritish */}
+        {isAdmin && (
+          <Card variant="glass" className="p-4 mb-6">
+            <div className="flex items-start sm:items-center justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="neo-button p-3 text-[var(--foreground)]">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    className="w-5 h-5"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
+                    />
+                  </svg>
+                </div>
+
+                <div>
+                  <h2 className="font-semibold text-[var(--foreground)]">
+                    Admin: Ovoz bilan kiritish
+                  </h2>
+                  <p className="text-xs text-[var(--foreground-secondary)]">
+                    Bosh sahifada ham dars qo&apos;shish yoki yangilash mumkin
+                  </p>
+                </div>
+              </div>
+
+              <Button
+                variant="secondary"
+                size="sm"
+                className="flex-shrink-0"
+                onClick={() => setVoiceOpen((v) => !v)}
+              >
+                {voiceOpen ? 'Yopish' : 'Ochish'}
+              </Button>
+            </div>
+
+            {voiceOpen && (
+              <div className="mt-4">
+                <VoiceInput onSuccess={refresh} compact />
+              </div>
+            )}
+          </Card>
         )}
 
         {/* Jadval */}

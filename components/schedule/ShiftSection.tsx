@@ -11,6 +11,7 @@ interface ShiftSectionProps {
   times: TimeSlot[];
   lessons: Lesson[];
   selectedDay?: Day; // Mobile uchun
+  todayDay?: Day | null; // Bugungi kun highlight uchun
   onUpdate?: () => void; // Admin edit uchun
 }
 
@@ -20,6 +21,7 @@ export default function ShiftSection({
   times,
   lessons,
   selectedDay,
+  todayDay,
   onUpdate,
 }: ShiftSectionProps) {
   // Aniq kun va vaqt uchun darsni topish
@@ -70,7 +72,7 @@ export default function ShiftSection({
                 border border-[var(--accent-primary)]/20
                 text-[var(--accent-primary)]
                 shadow-sm
-                ${index === 0 ? 'animate-pulse-glow' : ''}
+                ${todayDay === day.value ? 'animate-pulse-glow' : ''}
               `}
               style={{
                 animationDelay: `${index * 0.1}s`

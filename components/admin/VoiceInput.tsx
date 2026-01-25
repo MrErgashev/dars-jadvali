@@ -11,9 +11,10 @@ import Input from '@/components/ui/Input';
 
 interface VoiceInputProps {
   onSuccess: () => void;
+  compact?: boolean;
 }
 
-export default function VoiceInput({ onSuccess }: VoiceInputProps) {
+export default function VoiceInput({ onSuccess, compact = false }: VoiceInputProps) {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -132,22 +133,40 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
-        Tez kiritish (Ovoz / Matn)
-      </h2>
+      {!compact && (
+        <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
+          Tez kiritish (Ovoz / Matn)
+        </h2>
+      )}
 
       {/* Instructions */}
-      <Card variant="flat" className="p-4 mb-6">
-        <h3 className="font-medium text-[var(--foreground)] mb-2">
-          Buyruq formati:
-        </h3>
-        <p className="text-sm text-[var(--foreground-secondary)] mb-2">
-          [Kun] [Bo'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O'qituvchi] [Turi]
-        </p>
-        <p className="text-sm text-[var(--accent-primary)]">
-          Misol: Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza
-        </p>
-      </Card>
+      {compact ? (
+        <details className="mb-4">
+          <summary className="text-sm font-medium text-[var(--foreground)] cursor-pointer select-none">
+            Buyruq formati
+          </summary>
+          <Card variant="flat" className="p-4 mt-3">
+            <p className="text-sm text-[var(--foreground-secondary)] mb-2">
+              [Kun] [Bo'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O'qituvchi] [Turi]
+            </p>
+            <p className="text-sm text-[var(--accent-primary)]">
+              Misol: Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza
+            </p>
+          </Card>
+        </details>
+      ) : (
+        <Card variant="flat" className="p-4 mb-6">
+          <h3 className="font-medium text-[var(--foreground)] mb-2">
+            Buyruq formati:
+          </h3>
+          <p className="text-sm text-[var(--foreground-secondary)] mb-2">
+            [Kun] [Bo'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O'qituvchi] [Turi]
+          </p>
+          <p className="text-sm text-[var(--accent-primary)]">
+            Misol: Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza
+          </p>
+        </Card>
+      )}
 
       {/* Success message */}
       {success && (
@@ -175,7 +194,7 @@ export default function VoiceInput({ onSuccess }: VoiceInputProps) {
           value={textInput}
           onChange={(e) => handleTextChange(e.target.value)}
           placeholder="Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza"
-          className="input-glass w-full min-h-[100px] resize-none"
+          className={`input-glass w-full resize-none ${compact ? 'min-h-[80px]' : 'min-h-[100px]'}`}
           rows={3}
         />
       </div>
