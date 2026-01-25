@@ -1,9 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Lesson } from '@/lib/types';
 import { useAuth } from '@/context/AuthContext';
-import EditLessonModal from './EditLessonModal';
+import { LESSON_TYPES } from '@/lib/constants';
+import { deleteLesson, saveLesson } from '@/lib/firebase/db';
+import Button from '@/components/ui/Button';
 
 interface LessonCardProps {
   lesson: Lesson | null;
@@ -13,19 +15,95 @@ interface LessonCardProps {
 
 export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProps) {
   const { user } = useAuth();
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [subject, setSubject] = useState('');
+  const [room, setRoom] = useState('');
+  const [teacher, setTeacher] = useState('');
+  const [groups, setGroups] = useState('');
+  const [type, setType] = useState<Lesson['type']>('Ma\'ruza');
+  const [deleteArmed, setDeleteArmed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isAdmin = !!user;
 
-  const handleClick = () => {
-    if (isAdmin && lesson) {
-      setIsModalOpen(true);
-    }
-  };
+  useEffect(() => {
+    if (!lesson || isEditing) return;
+    setSubject(lesson.subject);
+    setRoom(lesson.room);
+    setTeacher(lesson.teacher);
+    setGroups(lesson.groups.join(', '));
+    setType(lesson.type);
+  }, [lesson?.id, lesson, isEditing]);
 
   const handleSuccess = () => {
     if (onUpdate) {
       onUpdate();
+    }
+  };
+
+  const resetDraft = () => {
+    if (!lesson) return;
+    setSubject(lesson.subject);
+    setRoom(lesson.room);
+    setTeacher(lesson.teacher);
+    setGroups(lesson.groups.join(', '));
+    setType(lesson.type);
+    setError(null);
+    setDeleteArmed(false);
+  };
+
+  const handleSave = async () => {
+    if (!lesson?.id) return;
+    setLoading(true);
+    setError(null);
+    setDeleteArmed(false);
+
+    try {
+      const groupsArray = groups
+        .split(/[,\s]+/)
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0);
+
+      if (groupsArray.length === 0) {
+        throw new Error("Kamida bitta guruh kiriting");
+      }
+
+      await saveLesson({
+        id: lesson.id,
+        day: lesson.day,
+        shift: lesson.shift,
+        period: lesson.period,
+        subject,
+        room,
+        teacher,
+        groups: groupsArray,
+        type,
+      });
+
+      handleSuccess();
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Xatolik yuz berdi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!lesson?.id) return;
+    setDeleteArmed(false);
+    setLoading(true);
+    setError(null);
+
+    try {
+      await deleteLesson(lesson.id);
+      handleSuccess();
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "O'chirishda xatolik");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -38,33 +116,123 @@ export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProp
   }
 
   return (
-    <>
-      <div
-        onClick={handleClick}
-        className={`
-          lesson-card glass rounded-xl p-3 min-h-[100px]
-          ${isAdmin ? 'cursor-pointer hover:ring-2 hover:ring-[var(--accent-primary)] hover:ring-offset-2 hover:ring-offset-transparent' : ''}
-        `}
-      >
-        {/* Admin badge */}
-        {isAdmin && (
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4 text-[var(--accent-primary)]"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10"
-              />
-            </svg>
+    <div
+      onClick={() => {
+        if (!isAdmin || isEditing) return;
+        setIsEditing(true);
+        setError(null);
+        setDeleteArmed(false);
+      }}
+      className={`
+        lesson-card glass rounded-xl p-3 min-h-[100px] relative
+        ${isAdmin && !isEditing ? 'cursor-pointer hover:ring-2 hover:ring-[var(--accent-primary)] hover:ring-offset-2 hover:ring-offset-transparent' : ''}
+      `}
+    >
+      {error && (
+        <div className="mb-2 p-2 rounded-lg bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 text-xs">
+          {error}
+        </div>
+      )}
+
+      {isEditing ? (
+        <div className="space-y-2">
+          <input
+            className="input-glass w-full px-3 py-2 text-sm"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            placeholder="Fan nomi"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              className="input-glass w-full px-3 py-2 text-xs"
+              value={room}
+              onChange={(e) => setRoom(e.target.value)}
+              placeholder="Xona"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <input
+              className="input-glass w-full px-3 py-2 text-xs"
+              value={teacher}
+              onChange={(e) => setTeacher(e.target.value)}
+              placeholder="O'qituvchi"
+              onClick={(e) => e.stopPropagation()}
+            />
           </div>
-        )}
+          <input
+            className="input-glass w-full px-3 py-2 text-xs"
+            value={groups}
+            onChange={(e) => setGroups(e.target.value)}
+            placeholder="Guruhlar (JM403, JM405)"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <div className="flex flex-wrap gap-1">
+            {LESSON_TYPES.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setType(t);
+                }}
+                className={`
+                  px-2 py-1 rounded-full text-[11px] font-medium transition-all
+                  ${type === t ? 'gradient-primary text-white' : 'neo-button text-[var(--foreground)]'}
+                `}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <Button
+              size="sm"
+              variant="danger"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (!deleteArmed) {
+                  setDeleteArmed(true);
+                  return;
+                }
+                void handleDelete();
+              }}
+              disabled={loading}
+              className="flex-shrink-0"
+            >
+              {deleteArmed ? "Tasdiqlash" : "O'chirish"}
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.stopPropagation();
+                resetDraft();
+                setIsEditing(false);
+              }}
+              disabled={loading}
+              className="flex-1"
+            >
+              Bekor
+            </Button>
+            <Button
+              size="sm"
+              variant="primary"
+              onClick={(e) => {
+                e.stopPropagation();
+                void handleSave();
+              }}
+              isLoading={loading}
+              disabled={loading}
+              className="flex-1"
+            >
+              Saqlash
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <>
 
         {/* Fan nomi */}
         <h4 className="font-semibold text-[var(--foreground)] text-sm mb-2 line-clamp-2">
@@ -145,17 +313,8 @@ export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProp
         >
           {lesson.type}
         </span>
-      </div>
-
-      {/* Edit Modal */}
-      {isAdmin && lesson && (
-        <EditLessonModal
-          lesson={lesson}
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          onSuccess={handleSuccess}
-        />
+        </>
       )}
-    </>
+    </div>
   );
 }
