@@ -125,6 +125,52 @@ export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps
     }
   };
 
+  // Barcha kunlarga qo'llash
+  const handleApplyToAllDays = async () => {
+    if (!confirm("Bu dars Dushanba-Juma orasidagi barcha kunlarga saqlanadi. Davom etasizmi?")) return;
+
+    setLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const groupsArray = groups
+        .split(/[,\s]+/)
+        .map((g) => g.trim())
+        .filter((g) => g.length > 0);
+
+      if (groupsArray.length === 0) {
+        throw new Error("Kamida bitta guruh kiriting");
+      }
+
+      // Barcha kunlar uchun saqlash
+      const allDays: Day[] = ['dushanba', 'seshanba', 'chorshanba', 'payshanba', 'juma'];
+
+      for (const d of allDays) {
+        await saveLesson({
+          day: d,
+          shift,
+          period,
+          subject,
+          room,
+          teacher,
+          groups: groupsArray,
+          type,
+        });
+      }
+
+      setSuccess("Dars 5 kunga muvaffaqiyatli saqlandi!");
+      resetForm();
+      onSuccess();
+
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Xatolik yuz berdi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
@@ -252,7 +298,7 @@ export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps
         />
 
         {/* Buttons */}
-        <div className="flex gap-3 pt-4">
+        <div className="flex flex-wrap gap-3 pt-4">
           {editingLesson && (
             <Button
               type="button"
@@ -281,6 +327,36 @@ export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps
           >
             {editingLesson ? 'Yangilash' : 'Saqlash'}
           </Button>
+        </div>
+
+        {/* Barcha kunlarga qo'llash */}
+        <div className="pt-2 border-t border-[var(--border)]">
+          <Button
+            type="button"
+            variant="secondary"
+            className="w-full"
+            disabled={loading || !subject || !room || !teacher || !groups}
+            onClick={handleApplyToAllDays}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5 mr-2"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+              />
+            </svg>
+            Barcha kunlarga qo'llash (Dush-Juma)
+          </Button>
+          <p className="text-xs text-[var(--foreground-secondary)] mt-2 text-center">
+            Bu darsni 5 kunga bir vaqtda saqlaydi
+          </p>
         </div>
       </form>
     </div>
