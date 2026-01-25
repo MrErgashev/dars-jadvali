@@ -59,10 +59,20 @@ export default function ShiftSection({
           <div />
 
           {/* Kun headerlari */}
-          {DAYS.map((day) => (
+          {DAYS.map((day, index) => (
             <div
               key={day.value}
-              className="text-center font-semibold text-sm text-[var(--foreground)] py-2"
+              className={`
+                text-center font-bold text-sm py-3 px-2 rounded-xl
+                bg-gradient-to-br from-[var(--accent-primary)]/20 to-[var(--accent-secondary)]/10
+                border border-[var(--accent-primary)]/20
+                text-[var(--accent-primary)]
+                shadow-sm
+                ${index === 0 ? 'animate-pulse-glow' : ''}
+              `}
+              style={{
+                animationDelay: `${index * 0.1}s`
+              }}
             >
               {day.label}
             </div>
