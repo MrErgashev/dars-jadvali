@@ -45,17 +45,22 @@ export default function Home() {
 
         {/* Admin: Ovoz bilan tez kiritish */}
         {isAdmin && (
-          <Card variant="glass" className="p-4 mb-6">
-            <div className="flex items-start sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <div className="neo-button p-3 text-[var(--foreground)]">
+          <>
+            {!voiceOpen && (
+              <div className="flex justify-end mb-3">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="gap-2"
+                  onClick={() => setVoiceOpen(true)}
+                >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
                     stroke="currentColor"
-                    className="w-5 h-5"
+                    className="w-4 h-4"
                   >
                     <path
                       strokeLinecap="round"
@@ -63,34 +68,57 @@ export default function Home() {
                       d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
                     />
                   </svg>
-                </div>
-
-                <div>
-                  <h2 className="font-semibold text-[var(--foreground)]">
-                    Admin: Ovoz bilan kiritish
-                  </h2>
-                  <p className="text-xs text-[var(--foreground-secondary)]">
-                    Bosh sahifada ham dars qo&apos;shish yoki yangilash mumkin
-                  </p>
-                </div>
-              </div>
-
-              <Button
-                variant="secondary"
-                size="sm"
-                className="flex-shrink-0"
-                onClick={() => setVoiceOpen((v) => !v)}
-              >
-                {voiceOpen ? 'Yopish' : 'Ochish'}
-              </Button>
-            </div>
-
-            {voiceOpen && (
-              <div className="mt-4">
-                <VoiceInput onSuccess={refresh} compact />
+                  <span className="hidden sm:inline">Ovoz bilan kiritish</span>
+                  <span className="sm:hidden">Ovoz</span>
+                </Button>
               </div>
             )}
-          </Card>
+
+            {voiceOpen && (
+              <Card variant="glass" className="p-4 mb-4">
+                <div className="flex items-start sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-start gap-3">
+                    <div className="neo-button p-2 text-[var(--foreground)]">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={2}
+                        stroke="currentColor"
+                        className="w-5 h-5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
+                        />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <h2 className="font-semibold text-[var(--foreground)]">
+                        Admin: Ovoz bilan kiritish
+                      </h2>
+                      <p className="text-xs text-[var(--foreground-secondary)] hidden sm:block">
+                        Bosh sahifada ham dars qo&apos;shish yoki yangilash mumkin
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="flex-shrink-0"
+                    onClick={() => setVoiceOpen(false)}
+                  >
+                    Yopish
+                  </Button>
+                </div>
+
+                <VoiceInput onSuccess={refresh} compact />
+              </Card>
+            )}
+          </>
         )}
 
         {/* Jadval */}
