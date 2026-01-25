@@ -27,9 +27,9 @@ export default function Header() {
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-bold gradient-text">Dars Jadvali</h1>
+              <h1 className="text-lg font-bold gradient-text">MrErgashev</h1>
               <p className="text-xs text-[var(--foreground-secondary)] hidden sm:block">
-                5 kunlik jadval
+                5 kunlik dars jadvali
               </p>
             </div>
           </Link>
