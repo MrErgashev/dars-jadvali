@@ -67,7 +67,7 @@ export default function ScheduleGrid({ lessons, isLoading }: ScheduleGridProps) 
   const currentShiftData = SHIFTS.find((s) => s.shift === selectedShift);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Bo'lim Tab tugmalari */}
       <div className="flex justify-center">
         <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
@@ -101,7 +101,7 @@ export default function ScheduleGrid({ lessons, isLoading }: ScheduleGridProps) 
       </div>
 
       {/* Mobile: Kun tanlash */}
-      <div className="mobile-day-selector mb-4">
+      <div className="mobile-day-selector mb-2">
         {DAYS.map((day) => (
           <button
             key={day.value}
