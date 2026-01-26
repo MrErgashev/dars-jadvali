@@ -165,7 +165,7 @@ class SpeechRecognitionService {
             const nextLanguage = preferredLanguages[languageIndex];
             this.recognition?.abort();
             setupRecognition(nextLanguage);
-            this.recognition.start();
+            this.recognition?.start();
             return;
           }
 
@@ -204,11 +204,10 @@ class SpeechRecognitionService {
           options.onEnd?.();
         };
 
-        // Boshlash
-        this.recognition.start();
       };
 
       setupRecognition(preferredLanguages[languageIndex]);
+      this.recognition?.start();
       return true;
     } catch (error) {
       options.onError?.(`Xatolik: ${error instanceof Error ? error.message : 'Noma\'lum xatolik'}`);
