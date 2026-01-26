@@ -1,9 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { toCanvas } from 'html-to-image';
+import jsPDF from 'jspdf';
 import { Lesson, Day, Shift } from '@/lib/types';
 import { DAYS, SHIFTS } from '@/lib/constants';
 import ShiftSection from './ShiftSection';
+import ScheduleExport from './ScheduleExport';
 
 const formatDateDDMMYYYY = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
@@ -46,6 +49,15 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   const [todayDay, setTodayDay] = useState<Day | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
   const [now, setNow] = useState<Date>(() => new Date());
+  const exportRef = useRef<HTMLDivElement | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+
+  const currentShiftData = useMemo(
+    () => SHIFTS.find((shiftData) => shiftData.shift === selectedShift),
+    [selectedShift]
+  );
+  const weekRange = useMemo(() => getWeekRangeForSchedule(now), [now]);
+  const generatedAt = useMemo(() => formatDateDDMMYYYY(now), [now]);
 
   // Bugungi kunni topish va tanlash
   useEffect(() => {
@@ -79,6 +91,90 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
       window.clearInterval(intervalId);
     };
   }, []);
+
+  type DownloadFormat = 'pdf' | 'jpeg';
+
+  const handleDownload = useCallback(
+    async (format: DownloadFormat) => {
+      if (isExporting) return;
+      if (!exportRef.current) {
+        window.alert("Jadval hali yuklanmoqda. Iltimos, biroz kuting.");
+        return;
+      }
+
+      const createFileName = (extension: DownloadFormat) => {
+        const shiftLabel = currentShiftData?.label ?? 'jadval';
+        const safeShift = shiftLabel.toLowerCase().replace(/\s+/g, '-');
+        const start = weekRange.start.replace(/\./g, '-');
+        const end = weekRange.end.replace(/\./g, '-');
+        return `dars-jadvali-${safeShift}-${start}-${end}.${extension}`;
+      };
+
+      const downloadDataUrl = (dataUrl: string, filename: string) => {
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      setIsExporting(true);
+      window.dispatchEvent(new CustomEvent('schedule-download-start'));
+
+      let success = false;
+
+      try {
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+        const node = exportRef.current;
+        const backgroundColor = window.getComputedStyle(node).backgroundColor || '#ffffff';
+        const canvas = await toCanvas(node, {
+          backgroundColor,
+          pixelRatio: 2,
+          cacheBust: true,
+        });
+
+        if (format === 'jpeg') {
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.98);
+          downloadDataUrl(dataUrl, createFileName('jpeg'));
+        } else {
+          const dataUrl = canvas.toDataURL('image/png');
+          const pdf = new jsPDF({
+            orientation: canvas.width > canvas.height ? 'landscape' : 'portrait',
+            unit: 'px',
+            format: [canvas.width, canvas.height],
+          });
+          pdf.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+          pdf.save(createFileName('pdf'));
+        }
+
+        success = true;
+      } catch (error) {
+        console.error('Schedule export failed', error);
+        window.alert("Yuklab olishda xatolik yuz berdi.");
+      } finally {
+        setIsExporting(false);
+        window.dispatchEvent(
+          new CustomEvent('schedule-download-end', { detail: { success } })
+        );
+      }
+    },
+    [currentShiftData?.label, isExporting, weekRange.end, weekRange.start]
+  );
+
+  useEffect(() => {
+    const handleRequest = (event: Event) => {
+      const detail = (event as CustomEvent<{ format?: DownloadFormat }>).detail;
+      if (!detail?.format) return;
+      void handleDownload(detail.format);
+    };
+
+    window.addEventListener('schedule-download', handleRequest as EventListener);
+
+    return () => {
+      window.removeEventListener('schedule-download', handleRequest as EventListener);
+    };
+  }, [handleDownload]);
 
   if (isLoading) {
     return (
@@ -115,61 +211,30 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
     },
   };
 
-  const currentShiftData = SHIFTS.find((s) => s.shift === selectedShift);
-  const weekRange = getWeekRangeForSchedule(now);
-  const leftShift = SHIFTS[0];
-  const rightShifts = SHIFTS.slice(1);
-
-  const renderShiftButton = (shiftData: (typeof SHIFTS)[number]) => (
-    <button
-      key={shiftData.shift}
-      onClick={() => setSelectedShift(shiftData.shift)}
-      className={`
-        relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
-        ${
-          selectedShift === shiftData.shift
-            ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
-            : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-        }
-      `}
-    >
-      <span className="relative z-10">{shiftData.label}</span>
-      {selectedShift === shiftData.shift && (
-        <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
-      )}
-    </button>
-  );
-
   return (
     <div className="space-y-3">
       {/* Bo'lim Tab tugmalari */}
       <div className="flex justify-center">
-        <div className="w-full max-w-3xl p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
-          {/* Desktop: Sana menyu qatorining markazida */}
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="flex-1 flex items-center gap-2">
-              {leftShift && renderShiftButton(leftShift)}
-            </div>
-            <div className="flex-1 flex items-center justify-center px-3 py-1 rounded-xl neo-inset">
-              <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
-                {weekRange.start}
-              </span>
-              <span className="text-lg lg:text-xl font-bold text-[var(--foreground-secondary)] mx-3">
-                -
-              </span>
-              <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
-                {weekRange.end}
-              </span>
-            </div>
-            <div className="flex-1 flex items-center justify-end gap-2">
-              {rightShifts.map(renderShiftButton)}
-            </div>
-          </div>
-
-          {/* Mobile: Menyular markazda */}
-          <div className="flex sm:hidden items-center justify-center gap-2">
-            {SHIFTS.map(renderShiftButton)}
-          </div>
+        <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
+          {SHIFTS.map((shiftData) => (
+            <button
+              key={shiftData.shift}
+              onClick={() => setSelectedShift(shiftData.shift)}
+              className={`
+                relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
+                ${
+                  selectedShift === shiftData.shift
+                    ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
+                    : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                }
+              `}
+            >
+              <span className="relative z-10">{shiftData.label}</span>
+              {selectedShift === shiftData.shift && (
+                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
+              )}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -216,6 +281,20 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
           todayDay={todayDay}
           onUpdate={onUpdate}
         />
+      )}
+
+      {currentShiftData && (
+        <div className="fixed left-[-10000px] top-0">
+          <ScheduleExport
+            ref={exportRef}
+            lessons={lessons}
+            shift={currentShiftData.shift}
+            shiftLabel={currentShiftData.label}
+            times={currentShiftData.times}
+            weekRange={weekRange}
+            generatedAt={generatedAt}
+          />
+        </div>
       )}
     </div>
   );
