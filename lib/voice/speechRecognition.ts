@@ -1,6 +1,9 @@
 /**
  * Web Speech API wrapper for O'zbek tili
+ * iOS-da qo'llab-quvvatlanmasin, lekin matn input fallback bor
  */
+
+import { getDeviceInfo } from './deviceDetection';
 
 // SpeechRecognition type declaration
 interface SpeechRecognitionEvent extends Event {
@@ -77,9 +80,17 @@ class SpeechRecognitionService {
 
   /**
    * Browser Web Speech API'ni qo'llab-quvvatlashini tekshirish
+   * iOS-da Web Speech API ishlamaydi
    */
   isSupported(): boolean {
     if (typeof window === 'undefined') return false;
+
+    // iOS-da Web Speech API ishlamaydi
+    const deviceInfo = getDeviceInfo();
+    if (deviceInfo.isIOS) {
+      return false;
+    }
+
     return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
   }
 
@@ -87,6 +98,16 @@ class SpeechRecognitionService {
    * Speech recognition'ni boshlash
    */
   start(options: SpeechRecognitionOptions = {}): boolean {
+    // iOS uchun special error message
+    const deviceInfo = getDeviceInfo();
+    if (deviceInfo.isIOS) {
+      const message = deviceInfo.isSafari
+        ? 'iOS Safari-da ovozli kiritish qo\'llab-quvvatlanmaydi. Iltimos, matn bilan kiritishdan foydalaning yoki Android qurilma ishlatashni tavsiya qilamiz.'
+        : 'iOS-da ovozli kiritish qo\'llab-quvvatlanmaydi. Matn bilan kiritishdan foydalaning.';
+      options.onError?.(message);
+      return false;
+    }
+
     if (!this.isSupported()) {
       options.onError?.('Speech recognition bu brauzerda qo\'llab-quvvatlanmaydi');
       return false;
@@ -187,7 +208,14 @@ class SpeechRecognitionService {
               errorMessage = 'Ovozni tanib olish to\'xtatildi.';
               break;
             case 'service-not-allowed':
-              errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning yoki Chrome brauzerini sinab ko\'ring.';
+              const device = getDeviceInfo();
+              if (device.isIOS) {
+                errorMessage = 'iOS-da ovozli kiritish qo\'llab-quvvatlanmaydi. Matn bilan kiritishdan foydalaning yoki Android qurilmani sinab ko\'ring.';
+              } else if (device.isSafari) {
+                errorMessage = 'Safari-da ovozli kiritish qo\'llab-quvvatlanmaydi. Chrome yoki Firefox brauzerini sinab ko\'ring.';
+              } else {
+                errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning.';
+              }
               break;
             case 'language-not-supported':
               errorMessage = 'O\'zbek tili qo\'llab-quvvatlanmaydi. Ruscha yoki inglizcha gapiring.';

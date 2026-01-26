@@ -5,6 +5,7 @@ import { speechRecognition } from '@/lib/voice/speechRecognition';
 import { parseVoiceCommand } from '@/lib/voice/parser';
 import { ParsedVoiceCommand, Day, Shift, LessonType } from '@/lib/types';
 import { saveLesson } from '@/lib/firebase/db';
+import { getDeviceInfo, supportsVoiceInput, getIOSFallbackMessage } from '@/lib/voice/deviceDetection';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 
@@ -30,10 +31,16 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [deviceInfo, setDeviceInfo] = useState<ReturnType<typeof getDeviceInfo> | null>(null);
 
-  // Browser support check - barcha qurilmalarda sinab ko'ramiz
+  // Browser support check va qurilma ma'lumotini olish
   useEffect(() => {
-    setIsSupported(speechRecognition.isSupported());
+    const info = getDeviceInfo();
+    setDeviceInfo(info);
+
+    // iOS-da voice ishlamaydi, lekin text input har doim ishlaydi
+    const voiceSupported = supportsVoiceInput();
+    setIsSupported(voiceSupported);
   }, []);
 
   const startListening = () => {
@@ -249,6 +256,18 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
         </div>
       )}
 
+      {/* iOS warning message */}
+      {deviceInfo?.isIOS && (
+        <div className="mb-6 p-4 rounded-xl bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+          <div className="flex items-center gap-2">
+            <span className="text-lg">⚠️</span>
+            <span className="text-sm">
+              {getIOSFallbackMessage()}
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Error message */}
       {error && (
         <div className="mb-6 p-4 rounded-xl bg-red-100 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800">
@@ -304,8 +323,8 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
 
       {/* Tugmalar */}
       <div className="flex gap-3 mb-6">
-        {/* Mikrofon (faqat qo'llab-quvvatlansa) */}
-        {isSupported && (
+        {/* Mikrofon (faqat qo'llab-quvvatlansa va iOS emas) */}
+        {isSupported && !deviceInfo?.isIOS && (
           <button
             onClick={isListening ? stopListening : startListening}
             className={`
@@ -329,6 +348,30 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
               />
             </svg>
             {isListening ? 'To\'xtat' : 'Ovoz'}
+          </button>
+        )}
+
+        {/* iOS-da mikrofon button-ni disabled qilib ko'rsatish */}
+        {deviceInfo?.isIOS && (
+          <button
+            disabled
+            className="neo-button p-4 rounded-xl flex items-center gap-2 text-gray-400 cursor-not-allowed opacity-50"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={2}
+              stroke="currentColor"
+              className="w-5 h-5"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
+              />
+            </svg>
+            Ovoz (iOS da ishlamaydi)
           </button>
         )}
 
