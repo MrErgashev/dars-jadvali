@@ -7,6 +7,7 @@ import { Lesson, Day, Shift } from '@/lib/types';
 import { DAYS, SHIFTS } from '@/lib/constants';
 import ShiftSection from './ShiftSection';
 import ScheduleExport from './ScheduleExport';
+import ScheduleExportAll from './ScheduleExportAll';
 
 const formatDateDDMMYYYY = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
@@ -50,6 +51,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
   const [now, setNow] = useState<Date>(() => new Date());
   const exportRef = useRef<HTMLDivElement | null>(null);
+  const exportAllRef = useRef<HTMLDivElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   const currentShiftData = useMemo(
@@ -93,18 +95,21 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   }, []);
 
   type DownloadFormat = 'pdf' | 'jpeg';
+  type DownloadScope = 'current' | 'all';
 
   const handleDownload = useCallback(
-    async (format: DownloadFormat) => {
+    async (format: DownloadFormat, scope: DownloadScope = 'current') => {
       if (isExporting) return;
-      if (!exportRef.current) {
+      const targetRef = scope === 'all' ? exportAllRef.current : exportRef.current;
+      if (!targetRef) {
         window.alert("Jadval hali yuklanmoqda. Iltimos, biroz kuting.");
         return;
       }
 
       const createFileName = (extension: DownloadFormat) => {
         const shiftLabel = currentShiftData?.label ?? 'jadval';
-        const safeShift = shiftLabel.toLowerCase().replace(/\s+/g, '-');
+        const safeShift =
+          scope === 'all' ? 'barchasi' : shiftLabel.toLowerCase().replace(/\s+/g, '-');
         const start = weekRange.start.replace(/\./g, '-');
         const end = weekRange.end.replace(/\./g, '-');
         return `dars-jadvali-${safeShift}-${start}-${end}.${extension}`;
@@ -126,11 +131,11 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
       try {
         await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-        const node = exportRef.current;
+        const node = targetRef;
         const backgroundColor = window.getComputedStyle(node).backgroundColor || '#ffffff';
         const canvas = await toCanvas(node, {
           backgroundColor,
-          pixelRatio: 2,
+          pixelRatio: 3,
           cacheBust: true,
         });
 
@@ -164,9 +169,10 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
   useEffect(() => {
     const handleRequest = (event: Event) => {
-      const detail = (event as CustomEvent<{ format?: DownloadFormat }>).detail;
+      const detail = (event as CustomEvent<{ format?: DownloadFormat; scope?: DownloadScope }>)
+        .detail;
       if (!detail?.format) return;
-      void handleDownload(detail.format);
+      void handleDownload(detail.format, detail.scope ?? 'current');
     };
 
     window.addEventListener('schedule-download', handleRequest as EventListener);
@@ -291,6 +297,12 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
             shift={currentShiftData.shift}
             shiftLabel={currentShiftData.label}
             times={currentShiftData.times}
+            weekRange={weekRange}
+            generatedAt={generatedAt}
+          />
+          <ScheduleExportAll
+            ref={exportAllRef}
+            lessons={lessons}
             weekRange={weekRange}
             generatedAt={generatedAt}
           />

@@ -3,17 +3,37 @@
 import { useEffect, useRef, useState } from 'react';
 
 type DownloadFormat = 'pdf' | 'jpeg';
+type DownloadScope = 'current' | 'all';
 
-const MENU_ITEMS: { format: DownloadFormat; title: string; subtitle: string }[] = [
+const MENU_ITEMS: {
+  format: DownloadFormat;
+  scope: DownloadScope;
+  title: string;
+  subtitle: string;
+}[] = [
   {
     format: 'pdf',
+    scope: 'current',
     title: 'PDF',
-    subtitle: "Yuqori sifatli jadval",
+    subtitle: "Yuqori sifatli jadval (joriy bo&apos;lim)",
   },
   {
     format: 'jpeg',
+    scope: 'current',
     title: 'JPEG',
-    subtitle: "Rasm ko'rinishida",
+    subtitle: "Rasm ko&apos;rinishida (joriy bo&apos;lim)",
+  },
+  {
+    format: 'pdf',
+    scope: 'all',
+    title: 'PDF',
+    subtitle: "Barcha bo&apos;limlar bitta sahifada",
+  },
+  {
+    format: 'jpeg',
+    scope: 'all',
+    title: 'JPEG',
+    subtitle: "Barcha bo&apos;limlar bitta sahifada",
   },
 ];
 
@@ -68,10 +88,10 @@ export default function DownloadScheduleButton() {
     };
   }, []);
 
-  const requestDownload = (format: DownloadFormat) => {
+  const requestDownload = (format: DownloadFormat, scope: DownloadScope) => {
     window.dispatchEvent(
       new CustomEvent('schedule-download', {
-        detail: { format },
+        detail: { format, scope },
       })
     );
     setOpen(false);
@@ -140,9 +160,9 @@ export default function DownloadScheduleButton() {
           </div>
           {MENU_ITEMS.map((item) => (
             <button
-              key={item.format}
+              key={`${item.format}-${item.scope}`}
               type="button"
-              onClick={() => requestDownload(item.format)}
+              onClick={() => requestDownload(item.format, item.scope)}
               className="w-full text-left px-3 py-2 rounded-xl hover:bg-[var(--background-secondary)] transition-colors"
               role="menuitem"
             >

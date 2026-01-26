@@ -76,7 +76,7 @@ const ScheduleExport = forwardRef<HTMLDivElement, ScheduleExportProps>(
             <div>
               <h2 className="text-2xl font-bold">Haftalik dars jadvali</h2>
               <p className="text-sm text-[var(--foreground-secondary)]">
-                MrErgashev • {shiftLabel}
+                MrErgashev - {shiftLabel}
               </p>
             </div>
           </div>
@@ -140,7 +140,7 @@ const ScheduleExport = forwardRef<HTMLDivElement, ScheduleExportProps>(
                             </span>
                           </div>
                           <div className="truncate">
-                            O'qituvchi:{' '}
+                            O&apos;qituvchi:{' '}
                             <span className="font-medium text-[var(--foreground)]">
                               {lesson.teacher}
                             </span>
@@ -160,7 +160,7 @@ const ScheduleExport = forwardRef<HTMLDivElement, ScheduleExportProps>(
                       </div>
                     ) : (
                       <div className="rounded-xl border border-dashed border-[var(--glass-border)] bg-[var(--background)]/50 p-3 min-h-[112px] flex items-center justify-center text-xs text-[var(--foreground-secondary)]">
-                        Bo'sh
+                        Bo&apos;sh
                       </div>
                     )}
                   </div>
