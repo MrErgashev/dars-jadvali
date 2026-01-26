@@ -98,12 +98,10 @@ class SpeechRecognitionService {
    * Speech recognition'ni boshlash
    */
   start(options: SpeechRecognitionOptions = {}): boolean {
-    // iOS uchun special error message
+    // iOS uchun special fallback - native diktat ishlatamiz
     const deviceInfo = getDeviceInfo();
     if (deviceInfo.isIOS) {
-      const message = deviceInfo.isSafari
-        ? 'iOS Safari-da ovozli kiritish qo\'llab-quvvatlanmaydi. Iltimos, matn bilan kiritishdan foydalaning yoki Android qurilma ishlatashni tavsiya qilamiz.'
-        : 'iOS-da ovozli kiritish qo\'llab-quvvatlanmaydi. Matn bilan kiritishdan foydalaning.';
+      const message = 'iOS-da: Matn maydoniga bosing, keyin keyboard mikrofon ikonasini bosing va gap eting.';
       options.onError?.(message);
       return false;
     }
@@ -210,9 +208,9 @@ class SpeechRecognitionService {
             case 'service-not-allowed':
               const device = getDeviceInfo();
               if (device.isIOS) {
-                errorMessage = 'iOS-da ovozli kiritish qo\'llab-quvvatlanmaydi. Matn bilan kiritishdan foydalaning yoki Android qurilmani sinab ko\'ring.';
+                errorMessage = 'iOS-da: Matn maydoniga bosing va keyboard diktatini ishlatang (🎤 ikonasi).';
               } else if (device.isSafari) {
-                errorMessage = 'Safari-da ovozli kiritish qo\'llab-quvvatlanmaydi. Chrome yoki Firefox brauzerini sinab ko\'ring.';
+                errorMessage = 'Safari-da ovozli kiritish qo\'llab-quvvatlanmaydi. Chrome brauzerini sinab ko\'ring yoki matn input ishlating.';
               } else {
                 errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning.';
               }

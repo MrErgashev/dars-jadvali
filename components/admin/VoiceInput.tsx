@@ -256,14 +256,19 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
         </div>
       )}
 
-      {/* iOS warning message */}
+      {/* iOS diktat instructions */}
       {deviceInfo?.isIOS && (
-        <div className="mb-6 p-4 rounded-xl bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-          <div className="flex items-center gap-2">
-            <span className="text-lg">⚠️</span>
-            <span className="text-sm">
-              {getIOSFallbackMessage()}
-            </span>
+        <div className="mb-6 p-4 rounded-xl bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+          <div className="text-sm font-medium mb-3 flex items-center gap-2">
+            <span>📱</span>
+            <span>iOS Diktat Mo'dı (Ovoz bilan Matn Kiritish):</span>
+          </div>
+          <div className="text-xs space-y-2 ml-6">
+            <p><strong>1-qadam:</strong> Matn maydoniga bosing</p>
+            <p><strong>2-qadam:</strong> Matn maydonida <em>keyboard</em> ochiladi</p>
+            <p><strong>3-qadam:</strong> Keyboard-da <strong>mikrofon ikonasi</strong> (🎤) bosing</p>
+            <p><strong>4-qadam:</strong> Ayt: <br/><code className="bg-blue-200 dark:bg-blue-800 px-2 py-1 rounded inline-block mt-1">"Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza"</code></p>
+            <p><strong>5-qadam:</strong> "Tahlil" tugmasini bosing</p>
           </div>
         </div>
       )}
@@ -351,11 +356,12 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
           </button>
         )}
 
-        {/* iOS-da mikrofon button-ni disabled qilib ko'rsatish */}
+        {/* iOS-da diktat (native keyboard voice) tugmasi */}
         {deviceInfo?.isIOS && (
           <button
             disabled
-            className="neo-button p-4 rounded-xl flex items-center gap-2 text-gray-400 cursor-not-allowed opacity-50"
+            title="iOS native diktat-ni ishlatish uchun matn maydoniga bosing"
+            className="neo-button p-4 rounded-xl flex items-center gap-2 text-gray-600 dark:text-gray-400 opacity-60 cursor-help"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -371,7 +377,7 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
                 d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
               />
             </svg>
-            Ovoz (iOS da ishlamaydi)
+            Diktat (Qo'lda)
           </button>
         )}
 
