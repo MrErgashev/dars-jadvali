@@ -1,13 +1,58 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
+import DownloadScheduleButton from '@/components/ui/DownloadScheduleButton';
 
 export default function Header() {
+  const [range, setRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
+
+  useEffect(() => {
+    const formatDateDDMMYYYY = (date: Date): string => {
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}.${month}.${year}`;
+    };
+
+    const getWeekRangeForSchedule = (date: Date) => {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      const day = d.getDay(); // 0=Yakshanba ... 6=Shanba
+      const isoDay = day === 0 ? 7 : day; // 1=Dushanba ... 7=Yakshanba
+
+      if (isoDay > 5) {
+        const daysToNextMonday = 8 - isoDay;
+        d.setDate(d.getDate() + daysToNextMonday);
+      } else {
+        d.setDate(d.getDate() - (isoDay - 1));
+      }
+
+      const start = new Date(d);
+      const end = new Date(d);
+      end.setDate(start.getDate() + 4);
+
+      return {
+        start: formatDateDDMMYYYY(start),
+        end: formatDateDDMMYYYY(end),
+      };
+    };
+
+    const update = () => setRange(getWeekRangeForSchedule(new Date()));
+    const timeoutId = window.setTimeout(update, 0);
+    const intervalId = window.setInterval(update, 60 * 1000);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   return (
     <header className="glass sticky top-0 z-50 mb-3">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="relative flex items-center justify-between h-16">
           {/* Logo va Sarlavha */}
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">
@@ -34,9 +79,25 @@ export default function Header() {
             </div>
           </Link>
 
+          {/* Haftalik sana (Header markazi) */}
+          {range.start && range.end && (
+            <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-3 px-4 py-1 rounded-xl neo-inset">
+              <span className="text-lg lg:text-xl font-extrabold gradient-text tracking-wide">
+                {range.start}
+              </span>
+              <span className="text-base lg:text-lg font-bold text-[var(--foreground-secondary)]">
+                -
+              </span>
+              <span className="text-lg lg:text-xl font-extrabold gradient-text tracking-wide">
+                {range.end}
+              </span>
+            </div>
+          )}
+
           {/* Navigatsiya */}
           <nav className="flex items-center gap-2">
             <ThemeToggle />
+            <DownloadScheduleButton />
 
             {/* Admin tugmasi */}
             <Link
