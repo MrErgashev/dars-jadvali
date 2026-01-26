@@ -9,6 +9,8 @@ import { DAY_NAMES, SHIFT_NAMES, LESSON_TYPE_NAMES } from '../constants';
 export function parseVoiceCommand(text: string): ParsedVoiceCommand {
   const lowerText = text.toLowerCase().trim();
   const words = lowerText.split(/\s+/);
+  const rawTokens = text.trim().split(/\s+/);
+  const lowerTokens = rawTokens.map((token) => token.toLowerCase());
 
   const result: ParsedVoiceCommand = {
     isComplete: false,
@@ -92,21 +94,52 @@ export function parseVoiceCommand(text: string): ParsedVoiceCommand {
     return true;
   });
 
-  // Fan nomi va o'qituvchi ismini ajratish
-  // Odatda o'qituvchi ismi oxirida (tur so'zidan oldin) keladi
-  if (cleanedWords.length > 0) {
-    // Agar 2 ta yoki undan ko'p so'z qolgan bo'lsa
-    if (cleanedWords.length >= 2) {
-      // Oxirgi so'z - o'qituvchi ismi bo'lishi mumkin
-      const possibleTeacher = cleanedWords[cleanedWords.length - 1];
-      // Boshqa so'zlar - fan nomi
-      const possibleSubject = cleanedWords.slice(0, -1).join(' ');
+  const roomTokenPattern = /^[A-Za-z]{1,3}\d{3}[A-Za-z]?$/;
+  const groupTokenPattern = /^[A-Za-z]{2,3}\d{3}$/;
+  const paraTokenPattern = /^\d+[-\s]?para$/i;
 
-      // O'qituvchi ismini capitalize qilish
+  const isIgnorableToken = (token: string, lowerToken: string) => {
+    if (knownPatterns.includes(lowerToken)) return true;
+    if (paraTokenPattern.test(lowerToken)) return true;
+    if (roomTokenPattern.test(token) || groupTokenPattern.test(token)) return true;
+    return false;
+  };
+
+  let lastLocationIndex = -1;
+  rawTokens.forEach((token, index) => {
+    if (roomTokenPattern.test(token) || groupTokenPattern.test(token)) {
+      lastLocationIndex = index;
+    }
+  });
+
+  const subjectTokens = rawTokens
+    .slice(0, lastLocationIndex === -1 ? rawTokens.length : lastLocationIndex)
+    .filter((token, index) => !isIgnorableToken(token, lowerTokens[index]));
+
+  const teacherTokens =
+    lastLocationIndex === -1
+      ? []
+      : rawTokens
+          .slice(lastLocationIndex + 1)
+          .filter((token, index) =>
+            !isIgnorableToken(token, lowerTokens[lastLocationIndex + 1 + index])
+          );
+
+  if (subjectTokens.length > 0 && teacherTokens.length > 0) {
+    result.subject = capitalizeWords(subjectTokens.join(' '));
+    result.teacher = capitalizeWords(teacherTokens.join(' '));
+  } else if (cleanedWords.length > 0) {
+    if (cleanedWords.length >= 3) {
+      const possibleTeacher = cleanedWords.slice(-2).join(' ');
+      const possibleSubject = cleanedWords.slice(0, -2).join(' ');
+      result.teacher = capitalizeWords(possibleTeacher);
+      result.subject = capitalizeWords(possibleSubject);
+    } else if (cleanedWords.length >= 2) {
+      const possibleTeacher = cleanedWords[cleanedWords.length - 1];
+      const possibleSubject = cleanedWords.slice(0, -1).join(' ');
       result.teacher = capitalizeWords(possibleTeacher);
       result.subject = capitalizeWords(possibleSubject);
     } else {
-      // Faqat bitta so'z - fan nomi
       result.subject = capitalizeWords(cleanedWords[0]);
     }
   }

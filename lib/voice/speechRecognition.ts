@@ -55,12 +55,20 @@ interface SpeechRecognition extends EventTarget {
 
 export interface SpeechRecognitionOptions {
   language?: string;
+  languages?: string[];
+  languageFallbacks?: string[];
+  maxAlternatives?: number;
   continuous?: boolean;
   interimResults?: boolean;
-  onResult?: (transcript: string, isFinal: boolean) => void;
+  onResult?: (transcript: string, isFinal: boolean, alternatives?: SpeechAlternative[]) => void;
   onError?: (error: string) => void;
   onStart?: () => void;
   onEnd?: () => void;
+}
+
+export interface SpeechAlternative {
+  transcript: string;
+  confidence: number;
 }
 
 class SpeechRecognitionService {
@@ -92,80 +100,115 @@ class SpeechRecognitionService {
     try {
       const SpeechRecognitionAPI =
         window.SpeechRecognition || window.webkitSpeechRecognition;
-      this.recognition = new SpeechRecognitionAPI();
 
-      // Sozlamalar
-      this.recognition.lang = options.language || 'uz-UZ'; // O'zbek tili
-      this.recognition.continuous = options.continuous ?? false;
-      this.recognition.interimResults = options.interimResults ?? true;
-      this.recognition.maxAlternatives = 1;
+      const languagesToTry = [
+        ...(options.languages ?? []),
+        ...(options.language ? [options.language] : []),
+        ...(options.languageFallbacks ?? []),
+      ].filter((lang, index, list) => lang && list.indexOf(lang) === index);
 
-      // Event handlers
-      this.recognition.onstart = () => {
-        this.isListening = true;
-        options.onStart?.();
-      };
+      const preferredLanguages =
+        languagesToTry.length > 0
+          ? languagesToTry
+          : ['uz-UZ', 'ru-RU', 'tr-TR'];
 
-      this.recognition.onresult = (event: SpeechRecognitionEvent) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+      let languageIndex = 0;
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const result = event.results[i];
-          if (result.isFinal) {
-            finalTranscript += result[0].transcript;
-          } else {
-            interimTranscript += result[0].transcript;
+      const setupRecognition = (language: string) => {
+        this.recognition = new SpeechRecognitionAPI();
+
+        // Sozlamalar
+        this.recognition.lang = language;
+        this.recognition.continuous = options.continuous ?? false;
+        this.recognition.interimResults = options.interimResults ?? true;
+        this.recognition.maxAlternatives = options.maxAlternatives ?? 3;
+
+        // Event handlers
+        this.recognition.onstart = () => {
+          this.isListening = true;
+          options.onStart?.();
+        };
+
+        this.recognition.onresult = (event: SpeechRecognitionEvent) => {
+          let finalTranscript = '';
+          let interimTranscript = '';
+          let finalAlternatives: SpeechAlternative[] | undefined;
+
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const result = event.results[i];
+            if (result.isFinal) {
+              finalTranscript += result[0].transcript;
+              finalAlternatives = Array.from(result).map((alt) => ({
+                transcript: alt.transcript.trim(),
+                confidence: alt.confidence,
+              }));
+            } else {
+              interimTranscript += result[0].transcript;
+            }
           }
-        }
 
-        if (finalTranscript) {
-          options.onResult?.(finalTranscript, true);
-        } else if (interimTranscript) {
-          options.onResult?.(interimTranscript, false);
-        }
+          if (finalTranscript) {
+            options.onResult?.(finalTranscript.trim(), true, finalAlternatives);
+          } else if (interimTranscript) {
+            options.onResult?.(interimTranscript.trim(), false);
+          }
+        };
+
+        this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+          this.isListening = false;
+
+          if (
+            event.error === 'language-not-supported' &&
+            languageIndex < preferredLanguages.length - 1
+          ) {
+            languageIndex += 1;
+            const nextLanguage = preferredLanguages[languageIndex];
+            this.recognition?.abort();
+            setupRecognition(nextLanguage);
+            this.recognition.start();
+            return;
+          }
+
+          let errorMessage = 'Ovozni tanib olishda xatolik';
+          switch (event.error) {
+            case 'no-speech':
+              errorMessage = 'Ovoz eshitilmadi. Mikrofonga yaqinroq gapiring va qayta urinib ko\'ring.';
+              break;
+            case 'audio-capture':
+              errorMessage = 'Mikrofon topilmadi. Mikrofon ulanganligini tekshiring.';
+              break;
+            case 'not-allowed':
+              errorMessage = 'Mikrofonga ruxsat berilmagan. Brauzer sozlamalaridan mikrofonga ruxsat bering.';
+              break;
+            case 'network':
+              errorMessage = 'Internet bilan muammo. Internetga ulanganligingizni tekshiring.';
+              break;
+            case 'aborted':
+              errorMessage = 'Ovozni tanib olish to\'xtatildi.';
+              break;
+            case 'service-not-allowed':
+              errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning yoki Chrome brauzerini sinab ko\'ring.';
+              break;
+            case 'language-not-supported':
+              errorMessage = 'O\'zbek tili qo\'llab-quvvatlanmaydi. Ruscha yoki inglizcha gapiring.';
+              break;
+            default:
+              errorMessage = `Xatolik: ${event.error}. Chrome brauzerida sinab ko'ring.`;
+          }
+
+          options.onError?.(errorMessage);
+        };
+
+        this.recognition.onend = () => {
+          this.isListening = false;
+          options.onEnd?.();
+        };
+
+        // Boshlash
+        this.recognition.start();
       };
 
-      this.recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-        this.isListening = false;
-
-        let errorMessage = 'Ovozni tanib olishda xatolik';
-        switch (event.error) {
-          case 'no-speech':
-            errorMessage = 'Ovoz eshitilmadi. Mikrofonga yaqinroq gapiring va qayta urinib ko\'ring.';
-            break;
-          case 'audio-capture':
-            errorMessage = 'Mikrofon topilmadi. Mikrofon ulanganligini tekshiring.';
-            break;
-          case 'not-allowed':
-            errorMessage = 'Mikrofonga ruxsat berilmagan. Brauzer sozlamalaridan mikrofonga ruxsat bering.';
-            break;
-          case 'network':
-            errorMessage = 'Internet bilan muammo. Internetga ulanganligingizni tekshiring.';
-            break;
-          case 'aborted':
-            errorMessage = 'Ovozni tanib olish to\'xtatildi.';
-            break;
-          case 'service-not-allowed':
-            errorMessage = 'Bu qurilmada ovozli kiritish qo\'llab-quvvatlanmaydi. Qo\'lda kiritishdan foydalaning yoki Chrome brauzerini sinab ko\'ring.';
-            break;
-          case 'language-not-supported':
-            errorMessage = 'O\'zbek tili qo\'llab-quvvatlanmaydi. Ruscha yoki inglizcha gapiring.';
-            break;
-          default:
-            errorMessage = `Xatolik: ${event.error}. Chrome brauzerida sinab ko'ring.`;
-        }
-
-        options.onError?.(errorMessage);
-      };
-
-      this.recognition.onend = () => {
-        this.isListening = false;
-        options.onEnd?.();
-      };
-
-      // Boshlash
-      this.recognition.start();
+      setupRecognition(preferredLanguages[languageIndex]);
       return true;
     } catch (error) {
       options.onError?.(`Xatolik: ${error instanceof Error ? error.message : 'Noma\'lum xatolik'}`);

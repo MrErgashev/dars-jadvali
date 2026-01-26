@@ -7,7 +7,13 @@ import { ParsedVoiceCommand, Day, Shift, LessonType } from '@/lib/types';
 import { saveLesson } from '@/lib/firebase/db';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
-import Input from '@/components/ui/Input';
+
+type TranscriptCandidate = {
+  text: string;
+  confidence?: number;
+  score: number;
+  parsed: ParsedVoiceCommand;
+};
 
 interface VoiceInputProps {
   onSuccess: () => void;
@@ -20,6 +26,7 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
   const [transcript, setTranscript] = useState('');
   const [textInput, setTextInput] = useState('');
   const [parsedResult, setParsedResult] = useState<ParsedVoiceCommand | null>(null);
+  const [candidates, setCandidates] = useState<TranscriptCandidate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -34,18 +41,72 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
     setSuccess(null);
     setTranscript('');
     setParsedResult(null);
+    setCandidates([]);
 
     const started = speechRecognition.start({
-      language: 'ru-RU',
+      languages: ['uz-UZ', 'ru-RU', 'tr-TR'],
       continuous: false,
       interimResults: true,
+      maxAlternatives: 3,
       onStart: () => setIsListening(true),
-      onResult: (text, isFinal) => {
+      onResult: (text, isFinal, alternatives) => {
         if (isFinal) {
-          setTranscript(text);
-          setTextInput(text);
-          const parsed = parseVoiceCommand(text);
-          setParsedResult(parsed);
+          const normalizedPrimary = text.trim().replace(/\s+/g, ' ');
+          const mergedCandidates = new Map<string, TranscriptCandidate>();
+
+          const scoreParsed = (parsed: ParsedVoiceCommand) => {
+            let score = 0;
+            if (parsed.day) score += 2;
+            if (parsed.shift) score += 2;
+            if (parsed.period) score += 2;
+            if (parsed.subject) score += 2;
+            if (parsed.room) score += 2;
+            if (parsed.groups && parsed.groups.length > 0) score += 2;
+            if (parsed.teacher) score += 2;
+            if (parsed.type) score += 1;
+            if (parsed.isComplete) score += 3;
+            return score;
+          };
+
+          const addCandidate = (candidateText: string, confidence?: number) => {
+            const normalized = candidateText.trim().replace(/\s+/g, ' ');
+            if (!normalized) return;
+            const parsed = parseVoiceCommand(normalized);
+            const score = scoreParsed(parsed);
+            const existing = mergedCandidates.get(normalized);
+            if (!existing || score > existing.score) {
+              mergedCandidates.set(normalized, {
+                text: normalized,
+                confidence,
+                score,
+                parsed,
+              });
+            }
+          };
+
+          addCandidate(normalizedPrimary);
+          alternatives?.forEach((alt) => addCandidate(alt.transcript, alt.confidence));
+
+          const sortedCandidates = Array.from(mergedCandidates.values()).sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score;
+            return (b.confidence ?? 0) - (a.confidence ?? 0);
+          });
+
+          const topCandidates = sortedCandidates.slice(0, 3);
+          const bestCandidate = topCandidates[0];
+
+          if (bestCandidate) {
+            setTranscript(bestCandidate.text);
+            setTextInput(bestCandidate.text);
+            setParsedResult(bestCandidate.parsed);
+          } else {
+            setTranscript(normalizedPrimary);
+            setTextInput(normalizedPrimary);
+            const parsed = parseVoiceCommand(normalizedPrimary);
+            setParsedResult(parsed);
+          }
+
+          setCandidates(topCandidates);
         }
       },
       onError: (err) => {
@@ -69,6 +130,7 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
   const handleTextChange = (text: string) => {
     setTextInput(text);
     setTranscript(text);
+    setCandidates([]);
     if (text.trim().length > 10) {
       const parsed = parseVoiceCommand(text);
       setParsedResult(parsed);
@@ -86,6 +148,7 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
     setError(null);
     const parsed = parseVoiceCommand(textInput);
     setParsedResult(parsed);
+    setCandidates([]);
   };
 
   const handleSave = async () => {
@@ -127,8 +190,16 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
     setTranscript('');
     setTextInput('');
     setParsedResult(null);
+    setCandidates([]);
     setError(null);
     setSuccess(null);
+  };
+
+  const handleCandidateSelect = (candidate: TranscriptCandidate) => {
+    setTextInput(candidate.text);
+    setTranscript(candidate.text);
+    setParsedResult(candidate.parsed);
+    setError(null);
   };
 
   return (
@@ -198,6 +269,38 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
           rows={3}
         />
       </div>
+
+      {candidates.length > 1 && (
+        <Card variant="flat" className="p-3 mb-4">
+          <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-2">
+            Variantlar:
+          </div>
+          <div className="flex flex-col gap-2">
+            {candidates.map((candidate, index) => (
+              <button
+                key={`${candidate.text}-${index}`}
+                type="button"
+                onClick={() => handleCandidateSelect(candidate)}
+                className={`text-left px-3 py-2 rounded-xl border transition-colors ${
+                  index === 0
+                    ? 'border-[var(--accent-primary)]/40 bg-[var(--accent-primary)]/10'
+                    : 'border-[var(--glass-border)] hover:bg-[var(--background-secondary)]'
+                }`}
+              >
+                <div className="text-sm font-medium text-[var(--foreground)]">
+                  {index + 1}. {candidate.text}
+                </div>
+                <div className="text-xs text-[var(--foreground-secondary)]">
+                  Aniqlik:{' '}
+                  {candidate.confidence !== undefined
+                    ? `${Math.round(candidate.confidence * 100)}%`
+                    : '-'}
+                </div>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
 
       {/* Tugmalar */}
       <div className="flex gap-3 mb-6">
