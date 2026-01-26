@@ -15,25 +15,25 @@ const MENU_ITEMS: {
     format: 'pdf',
     scope: 'current',
     title: 'PDF',
-    subtitle: "Yuqori sifatli jadval (joriy bo&apos;lim)",
+    subtitle: "Joriy bo'lim uchun yuqori sifatli",
   },
   {
     format: 'jpeg',
     scope: 'current',
     title: 'JPEG',
-    subtitle: "Rasm ko&apos;rinishida (joriy bo&apos;lim)",
+    subtitle: "Joriy bo'lim rasm ko'rinishida",
   },
   {
     format: 'pdf',
     scope: 'all',
     title: 'PDF',
-    subtitle: "Barcha bo&apos;limlar bitta sahifada",
+    subtitle: "Barcha bo'limlar bitta sahifada",
   },
   {
     format: 'jpeg',
     scope: 'all',
     title: 'JPEG',
-    subtitle: "Barcha bo&apos;limlar bitta sahifada",
+    subtitle: "Barcha bo'limlar bitta sahifada",
   },
 ];
 
@@ -153,7 +153,7 @@ export default function DownloadScheduleButton() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-2 w-56 glass rounded-2xl p-2 border border-[var(--glass-border)] shadow-lg animate-scale-in"
+          className="absolute right-0 mt-2 w-64 glass-strong rounded-2xl p-2 border border-[var(--glass-border)] shadow-xl animate-scale-in"
         >
           <div className="px-3 py-2 text-xs font-semibold text-[var(--foreground-secondary)]">
             Yuklab olish
