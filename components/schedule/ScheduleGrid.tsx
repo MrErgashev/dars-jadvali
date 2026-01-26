@@ -117,45 +117,58 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
   const currentShiftData = SHIFTS.find((s) => s.shift === selectedShift);
   const weekRange = getWeekRangeForSchedule(now);
+  const leftShift = SHIFTS[0];
+  const rightShifts = SHIFTS.slice(1);
+
+  const renderShiftButton = (shiftData: (typeof SHIFTS)[number]) => (
+    <button
+      key={shiftData.shift}
+      onClick={() => setSelectedShift(shiftData.shift)}
+      className={`
+        relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
+        ${
+          selectedShift === shiftData.shift
+            ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
+            : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+        }
+      `}
+    >
+      <span className="relative z-10">{shiftData.label}</span>
+      {selectedShift === shiftData.shift && (
+        <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
+      )}
+    </button>
+  );
 
   return (
     <div className="space-y-3">
       {/* Bo'lim Tab tugmalari */}
       <div className="flex justify-center">
-        <div className="inline-flex flex-col items-center gap-3">
-          <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
-            {SHIFTS.map((shiftData) => (
-              <button
-                key={shiftData.shift}
-                onClick={() => setSelectedShift(shiftData.shift)}
-                className={`
-                  relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
-                  ${
-                    selectedShift === shiftData.shift
-                      ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
-                      : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-                  }
-                `}
-              >
-                <span className="relative z-10">{shiftData.label}</span>
-                {selectedShift === shiftData.shift && (
-                  <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
-                )}
-              </button>
-            ))}
+        <div className="w-full max-w-3xl p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
+          {/* Desktop: Sana menyu qatorining markazida */}
+          <div className="hidden sm:flex items-center gap-2">
+            <div className="flex-1 flex items-center gap-2">
+              {leftShift && renderShiftButton(leftShift)}
+            </div>
+            <div className="flex-1 flex items-center justify-center px-3 py-1 rounded-xl neo-inset">
+              <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
+                {weekRange.start}
+              </span>
+              <span className="text-lg lg:text-xl font-bold text-[var(--foreground-secondary)] mx-3">
+                -
+              </span>
+              <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
+                {weekRange.end}
+              </span>
+            </div>
+            <div className="flex-1 flex items-center justify-end gap-2">
+              {rightShifts.map(renderShiftButton)}
+            </div>
           </div>
 
-          {/* Haftalik sana (Desktop) */}
-          <div className="hidden sm:flex items-center gap-3 px-4 py-1 rounded-xl neo-inset">
-            <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
-              {weekRange.start}
-            </span>
-            <span className="text-lg lg:text-xl font-bold text-[var(--foreground-secondary)]">
-              -
-            </span>
-            <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
-              {weekRange.end}
-            </span>
+          {/* Mobile: Menyular markazda */}
+          <div className="flex sm:hidden items-center justify-center gap-2">
+            {SHIFTS.map(renderShiftButton)}
           </div>
         </div>
       </div>
