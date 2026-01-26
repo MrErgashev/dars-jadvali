@@ -5,6 +5,36 @@ import { Lesson, Day, Shift } from '@/lib/types';
 import { DAYS, SHIFTS } from '@/lib/constants';
 import ShiftSection from './ShiftSection';
 
+const formatDateDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
+const getWeekRangeForSchedule = (date: Date) => {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  const day = d.getDay(); // 0=Yakshanba ... 6=Shanba
+  const isoDay = day === 0 ? 7 : day; // 1=Dushanba ... 7=Yakshanba
+
+  if (isoDay > 5) {
+    const daysToNextMonday = 8 - isoDay;
+    d.setDate(d.getDate() + daysToNextMonday);
+  } else {
+    d.setDate(d.getDate() - (isoDay - 1));
+  }
+
+  const start = new Date(d);
+  const end = new Date(d);
+  end.setDate(start.getDate() + 4); // Juma
+
+  return {
+    start: formatDateDDMMYYYY(start),
+    end: formatDateDDMMYYYY(end),
+  };
+};
+
 interface ScheduleGridProps {
   lessons: Lesson[];
   isLoading?: boolean;
@@ -15,6 +45,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   const [selectedDay, setSelectedDay] = useState<Day>('dushanba');
   const [todayDay, setTodayDay] = useState<Day | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
+  const [now, setNow] = useState<Date>(() => new Date());
 
   // Bugungi kunni topish va tanlash
   useEffect(() => {
@@ -32,12 +63,14 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
     const timeoutId = window.setTimeout(() => {
       const initialToday = getTodayDay();
+      setNow(new Date());
       setTodayDay(initialToday);
       if (initialToday) setSelectedDay(initialToday);
     }, 0);
 
     // Kunni avtomatik yangilash (tungi 00:00 dan keyin)
     const intervalId = window.setInterval(() => {
+      setNow(new Date());
       setTodayDay(getTodayDay());
     }, 60 * 1000);
 
@@ -83,38 +116,59 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   };
 
   const currentShiftData = SHIFTS.find((s) => s.shift === selectedShift);
+  const weekRange = getWeekRangeForSchedule(now);
 
   return (
     <div className="space-y-3">
       {/* Bo'lim Tab tugmalari */}
       <div className="flex justify-center">
-        <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
-          {SHIFTS.map((shiftData) => (
-            <button
-              key={shiftData.shift}
-              onClick={() => setSelectedShift(shiftData.shift)}
-              className={`
-                relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
-                ${
-                  selectedShift === shiftData.shift
-                    ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
-                    : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
-                }
-              `}
-            >
-              <span className="relative z-10">{shiftData.label}</span>
-              {selectedShift === shiftData.shift && (
-                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
-              )}
-            </button>
-          ))}
+        <div className="inline-flex flex-col items-center gap-3">
+          <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
+            {SHIFTS.map((shiftData) => (
+              <button
+                key={shiftData.shift}
+                onClick={() => setSelectedShift(shiftData.shift)}
+                className={`
+                  relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
+                  ${
+                    selectedShift === shiftData.shift
+                      ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
+                      : 'text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                  }
+                `}
+              >
+                <span className="relative z-10">{shiftData.label}</span>
+                {selectedShift === shiftData.shift && (
+                  <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-white/5 to-transparent" />
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Haftalik sana (Desktop) */}
+          <div className="hidden sm:flex items-center gap-3 px-4 py-1 rounded-xl neo-inset">
+            <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
+              {weekRange.start}
+            </span>
+            <span className="text-lg lg:text-xl font-bold text-[var(--foreground-secondary)]">
+              -
+            </span>
+            <span className="text-xl lg:text-2xl font-extrabold gradient-text tracking-wide">
+              {weekRange.end}
+            </span>
+          </div>
         </div>
       </div>
 
       {/* Vaqt ko'rsatkichi */}
       <div className="text-center">
         <span className={`text-sm font-medium ${shiftColors[selectedShift].text}`}>
-          {currentShiftData?.times.map((t) => t.time).join(' / ')}
+          <span className="hidden sm:inline">
+            {currentShiftData?.times.map((t) => t.time).join(' / ')}
+          </span>
+          <span className="sm:hidden text-base font-semibold gradient-text">
+            {weekRange.start} - {weekRange.end}
+          </span>
         </span>
       </div>
 
