@@ -20,6 +20,20 @@ export const metadata: Metadata = {
   keywords: ['dars jadvali', 'universitet', 'jadval', 'kunduzgi', 'sirtqi', 'kechki'],
 };
 
+// Sahifa yuklanishidan oldin temani belgilash uchun script
+const themeScript = `
+  (function() {
+    try {
+      var saved = localStorage.getItem('theme');
+      if (saved === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    } catch(e) {}
+  })();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -27,6 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="uz" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <ThemeProvider>
           <AuthProvider>
