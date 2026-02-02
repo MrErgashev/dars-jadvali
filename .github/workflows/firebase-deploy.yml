@@ -1,0 +1,47 @@
+name: Deploy to Firebase
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Cloud Functions
+      - name: Install Functions dependencies
+        run: cd functions && npm ci
+
+      - name: Build Functions
+        run: cd functions && npm run build
+
+      # Frontend
+      - name: Install Frontend dependencies
+        run: npm ci
+
+      - name: Build Frontend
+        run: npm run build
+
+      # Deploy (only main branch on push)
+      - name: Deploy to Firebase
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy
+        env:
+          # Service Account JSON key bilan autentifikatsiya (tavsiya etiladi)
+          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          # Yoki legacy token bilan:
+          # FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
