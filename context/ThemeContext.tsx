@@ -25,9 +25,10 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       setThemeState(savedTheme);
       document.documentElement.classList.toggle('dark', savedTheme === 'dark');
     } else {
-      // Birinchi marta ochilganda har doim yorug' (light) tema
-      setThemeState('light');
-      document.documentElement.classList.remove('dark');
+      // System preference tekshirish
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setThemeState(prefersDark ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', prefersDark);
     }
   }, []);
 
