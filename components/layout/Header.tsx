@@ -1,53 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import ThemeToggle from '@/components/ui/ThemeToggle';
 import DownloadScheduleButton from '@/components/ui/DownloadScheduleButton';
+import { useWeek } from '@/context/WeekContext';
 
 export default function Header() {
-  const [range, setRange] = useState<{ start: string; end: string }>({ start: '', end: '' });
-
-  useEffect(() => {
-    const formatDateDDMMYYYY = (date: Date): string => {
-      const day = String(date.getDate()).padStart(2, '0');
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const year = date.getFullYear();
-      return `${day}.${month}.${year}`;
-    };
-
-    const getWeekRangeForSchedule = (date: Date) => {
-      const d = new Date(date);
-      d.setHours(0, 0, 0, 0);
-      const day = d.getDay(); // 0=Yakshanba ... 6=Shanba
-      const isoDay = day === 0 ? 7 : day; // 1=Dushanba ... 7=Yakshanba
-
-      if (isoDay > 5) {
-        const daysToNextMonday = 8 - isoDay;
-        d.setDate(d.getDate() + daysToNextMonday);
-      } else {
-        d.setDate(d.getDate() - (isoDay - 1));
-      }
-
-      const start = new Date(d);
-      const end = new Date(d);
-      end.setDate(start.getDate() + 4);
-
-      return {
-        start: formatDateDDMMYYYY(start),
-        end: formatDateDDMMYYYY(end),
-      };
-    };
-
-    const update = () => setRange(getWeekRangeForSchedule(new Date()));
-    const timeoutId = window.setTimeout(update, 0);
-    const intervalId = window.setInterval(update, 60 * 1000);
-
-    return () => {
-      window.clearTimeout(timeoutId);
-      window.clearInterval(intervalId);
-    };
-  }, []);
+  const {
+    weekRange,
+    isCurrentWeek,
+    goToPreviousWeek,
+    goToNextWeek,
+    goToCurrentWeek,
+  } = useWeek();
 
   return (
     <header className="glass sticky top-0 z-50 mb-3">
@@ -79,18 +44,81 @@ export default function Header() {
             </div>
           </Link>
 
-          {/* Haftalik sana (Header markazi) */}
-          {range.start && range.end && (
-            <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-3 px-4 py-1 rounded-xl neo-inset">
-              <span className="text-lg lg:text-xl font-extrabold gradient-text tracking-wide">
-                {range.start}
-              </span>
-              <span className="text-base lg:text-lg font-bold text-[var(--foreground-secondary)]">
-                -
-              </span>
-              <span className="text-lg lg:text-xl font-extrabold gradient-text tracking-wide">
-                {range.end}
-              </span>
+          {/* Haftalik sana (Header markazi) - Week Filter */}
+          {weekRange.start && weekRange.end && (
+            <div className="hidden sm:flex absolute left-1/2 -translate-x-1/2 items-center gap-1.5 lg:gap-2">
+              {/* Oldingi hafta tugmasi */}
+              <button
+                onClick={goToPreviousWeek}
+                className="neo-button p-2 text-[var(--foreground)] hover:text-[var(--accent-primary)] transition-colors"
+                title="Oldingi hafta"
+                aria-label="Oldingi hafta"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4 lg:w-5 lg:h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M15.75 19.5 8.25 12l7.5-7.5"
+                  />
+                </svg>
+              </button>
+
+              {/* Hafta oralig'i */}
+              <button
+                onClick={goToCurrentWeek}
+                disabled={isCurrentWeek}
+                className={`px-3 lg:px-4 py-1.5 rounded-xl neo-inset flex items-center gap-2 lg:gap-3 transition-all ${
+                  !isCurrentWeek
+                    ? 'hover:bg-[var(--accent-primary)]/10 cursor-pointer'
+                    : 'cursor-default'
+                }`}
+                title={isCurrentWeek ? 'Hozirgi hafta' : 'Hozirgi haftaga qaytish'}
+              >
+                <span className="text-base lg:text-lg font-extrabold gradient-text tracking-wide">
+                  {weekRange.start}
+                </span>
+                <span className="text-sm lg:text-base font-bold text-[var(--foreground-secondary)]">
+                  -
+                </span>
+                <span className="text-base lg:text-lg font-extrabold gradient-text tracking-wide">
+                  {weekRange.end}
+                </span>
+                {!isCurrentWeek && (
+                  <span className="ml-1 text-xs text-[var(--accent-primary)] font-medium">
+                    ↻
+                  </span>
+                )}
+              </button>
+
+              {/* Keyingi hafta tugmasi */}
+              <button
+                onClick={goToNextWeek}
+                className="neo-button p-2 text-[var(--foreground)] hover:text-[var(--accent-primary)] transition-colors"
+                title="Keyingi hafta"
+                aria-label="Keyingi hafta"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="w-4 h-4 lg:w-5 lg:h-5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m8.25 4.5 7.5 7.5-7.5 7.5"
+                  />
+                </svg>
+              </button>
             </div>
           )}
 

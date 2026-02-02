@@ -7,10 +7,12 @@ import ScheduleGrid from '@/components/schedule/ScheduleGrid';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useAuth } from '@/context/AuthContext';
+import { useWeek } from '@/context/WeekContext';
 import { useSchedule } from '@/hooks/useSchedule';
 
 export default function Home() {
-  const { lessons, loading, error, refresh } = useSchedule();
+  const { weekStartISO } = useWeek();
+  const { lessons, loading, error, refresh } = useSchedule({ weekStartISO });
   const { user } = useAuth();
   const isAdmin = !!user;
   const [voiceOpen, setVoiceOpen] = useState(false);

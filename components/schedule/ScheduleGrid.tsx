@@ -8,36 +8,8 @@ import { DAYS, SHIFTS } from '@/lib/constants';
 import ShiftSection from './ShiftSection';
 import ScheduleExport from './ScheduleExport';
 import ScheduleExportAll from './ScheduleExportAll';
-
-const formatDateDDMMYYYY = (date: Date): string => {
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}.${month}.${year}`;
-};
-
-const getWeekRangeForSchedule = (date: Date) => {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  const day = d.getDay(); // 0=Yakshanba ... 6=Shanba
-  const isoDay = day === 0 ? 7 : day; // 1=Dushanba ... 7=Yakshanba
-
-  if (isoDay > 5) {
-    const daysToNextMonday = 8 - isoDay;
-    d.setDate(d.getDate() + daysToNextMonday);
-  } else {
-    d.setDate(d.getDate() - (isoDay - 1));
-  }
-
-  const start = new Date(d);
-  const end = new Date(d);
-  end.setDate(start.getDate() + 4); // Juma
-
-  return {
-    start: formatDateDDMMYYYY(start),
-    end: formatDateDDMMYYYY(end),
-  };
-};
+import { useWeek } from '@/context/WeekContext';
+import { formatDateDDMMYYYY } from '@/lib/utils/week';
 
 interface ScheduleGridProps {
   lessons: Lesson[];
@@ -49,17 +21,19 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   const [selectedDay, setSelectedDay] = useState<Day>('dushanba');
   const [todayDay, setTodayDay] = useState<Day | null>(null);
   const [selectedShift, setSelectedShift] = useState<Shift>('kunduzgi');
-  const [now, setNow] = useState<Date>(() => new Date());
   const exportRef = useRef<HTMLDivElement | null>(null);
   const exportAllRef = useRef<HTMLDivElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  // Tanlangan hafta oralig'i va navigatsiya (WeekContext'dan)
+  const { weekRange, isCurrentWeek, goToPreviousWeek, goToNextWeek, goToCurrentWeek } = useWeek();
 
   const currentShiftData = useMemo(
     () => SHIFTS.find((shiftData) => shiftData.shift === selectedShift),
     [selectedShift]
   );
-  const weekRange = useMemo(() => getWeekRangeForSchedule(now), [now]);
-  const generatedAt = useMemo(() => formatDateDDMMYYYY(now), [now]);
+  // Export qilgan paytning sanasi
+  const generatedAt = useMemo(() => formatDateDDMMYYYY(new Date()), []);
 
   // Bugungi kunni topish va tanlash
   useEffect(() => {
@@ -77,14 +51,12 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
     const timeoutId = window.setTimeout(() => {
       const initialToday = getTodayDay();
-      setNow(new Date());
       setTodayDay(initialToday);
       if (initialToday) setSelectedDay(initialToday);
     }, 0);
 
     // Kunni avtomatik yangilash (tungi 00:00 dan keyin)
     const intervalId = window.setInterval(() => {
-      setNow(new Date());
       setTodayDay(getTodayDay());
     }, 60 * 1000);
 
@@ -244,16 +216,42 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
         </div>
       </div>
 
-      {/* Vaqt ko'rsatkichi */}
+      {/* Vaqt ko'rsatkichi (Desktop) + Mobile hafta navigatsiya */}
       <div className="text-center">
-        <span className={`text-sm font-medium ${shiftColors[selectedShift].text}`}>
-          <span className="hidden sm:inline">
-            {currentShiftData?.times.map((t) => t.time).join(' / ')}
-          </span>
-          <span className="sm:hidden text-base font-semibold gradient-text">
-            {weekRange.start} - {weekRange.end}
-          </span>
+        {/* Desktop: Vaqt slotlari */}
+        <span className={`text-sm font-medium ${shiftColors[selectedShift].text} hidden sm:inline`}>
+          {currentShiftData?.times.map((t) => t.time).join(' / ')}
         </span>
+
+        {/* Mobile: Hafta navigatsiyasi */}
+        <div className="sm:hidden flex items-center justify-center gap-2">
+          <button
+            onClick={goToPreviousWeek}
+            className="neo-button p-1.5 text-[var(--foreground)] hover:text-[var(--accent-primary)]"
+            aria-label="Oldingi hafta"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button
+            onClick={goToCurrentWeek}
+            disabled={isCurrentWeek}
+            className={`px-3 py-1 rounded-lg neo-inset text-sm font-semibold gradient-text ${!isCurrentWeek ? 'active:scale-95' : ''}`}
+          >
+            {weekRange.start} - {weekRange.end}
+            {!isCurrentWeek && <span className="ml-1 text-xs text-[var(--accent-primary)]">↻</span>}
+          </button>
+          <button
+            onClick={goToNextWeek}
+            className="neo-button p-1.5 text-[var(--foreground)] hover:text-[var(--accent-primary)]"
+            aria-label="Keyingi hafta"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Mobile: Kun tanlash */}

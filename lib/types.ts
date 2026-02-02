@@ -16,6 +16,7 @@ export interface Lesson {
   teacher: string;
   groups: string[];
   type: LessonType;
+  weekStart?: string; // YYYY-MM-DD format, hafta boshlanishi (Dushanba)
   updatedAt?: Date;
   updatedBy?: string;
 }
