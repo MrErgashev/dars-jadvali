@@ -42,18 +42,22 @@ export default function ShiftSection({
 
   return (
     <div className={`shift-${shift} mb-6`}>
-      {/* Bo'lim sarlavhasi */}
-      <div className="flex items-center gap-3 mb-4">
+      {/* Bo'lim sarlavhasi - Desktop: full, Mobile: compact */}
+      <div className="flex items-center gap-3 mb-4 sm:mb-4 mb-2">
         <div
-          className="w-1 h-8 rounded-full"
+          className="w-1.5 sm:w-1 h-6 sm:h-8 rounded-full"
           style={{ backgroundColor: shiftColors[shift] }}
         />
         <h3
-          className="text-lg font-bold"
+          className="text-base sm:text-lg font-bold hidden sm:block"
           style={{ color: shiftColors[shift] }}
         >
           {label}
         </h3>
+        {/* Mobile: Vaqt oralig'i ko'rsatish */}
+        <span className="sm:hidden text-xs font-medium text-[var(--foreground-secondary)]">
+          {times.map(t => t.time).join(' • ')}
+        </span>
       </div>
 
       {/* Desktop: Grid ko'rinish */}

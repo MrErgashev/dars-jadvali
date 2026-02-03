@@ -17,7 +17,7 @@ export default function Header() {
   return (
     <header className="glass sticky top-0 z-50 mb-3">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="relative flex items-center justify-between h-16">
+        <div className="relative flex items-center justify-between h-14 sm:h-16">
           {/* Logo va Sarlavha */}
           <Link href="/" className="flex items-center gap-3">
             <div className="w-10 h-10 gradient-primary rounded-xl flex items-center justify-center">

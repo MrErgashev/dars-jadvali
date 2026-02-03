@@ -156,11 +156,34 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="skeleton h-14 w-full rounded-2xl" />
-        <div className="grid grid-cols-6 gap-4">
+      <div className="space-y-4">
+        {/* Shift tabs skeleton */}
+        <div className="flex justify-center">
+          <div className="skeleton h-12 w-64 sm:w-80 rounded-2xl" />
+        </div>
+        {/* Week nav skeleton (mobile) */}
+        <div className="sm:hidden flex justify-center">
+          <div className="skeleton h-11 w-48 rounded-xl" />
+        </div>
+        {/* Day selector skeleton (mobile) */}
+        <div className="sm:hidden flex gap-2 overflow-hidden px-1">
+          {[...Array(5)].map((_, j) => (
+            <div key={j} className="skeleton h-11 w-24 rounded-xl flex-shrink-0" />
+          ))}
+        </div>
+        {/* Desktop grid skeleton */}
+        <div className="hidden sm:grid grid-cols-6 gap-4">
           {[...Array(18)].map((_, j) => (
             <div key={j} className="skeleton h-28 rounded-xl" />
+          ))}
+        </div>
+        {/* Mobile list skeleton */}
+        <div className="sm:hidden space-y-3">
+          {[...Array(3)].map((_, j) => (
+            <div key={j} className="flex gap-3">
+              <div className="skeleton h-16 w-16 rounded-xl flex-shrink-0" />
+              <div className="skeleton h-24 flex-1 rounded-xl" />
+            </div>
           ))}
         </div>
       </div>
@@ -192,14 +215,14 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
   return (
     <div className="space-y-3">
       {/* Bo'lim Tab tugmalari */}
-      <div className="flex justify-center">
-        <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo">
+      <div className="flex justify-center px-2 sm:px-0">
+        <div className="inline-flex p-1.5 rounded-2xl bg-[var(--background-secondary)] neo max-w-full overflow-x-auto scrollbar-hide">
           {SHIFTS.map((shiftData) => (
             <button
               key={shiftData.shift}
               onClick={() => setSelectedShift(shiftData.shift)}
               className={`
-                relative px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-300
+                relative px-4 sm:px-6 py-3 min-h-[44px] rounded-xl text-sm font-semibold transition-all duration-300 flex-shrink-0 active:scale-95
                 ${
                   selectedShift === shiftData.shift
                     ? `bg-gradient-to-r ${shiftColors[shiftData.shift].bg} ${shiftColors[shiftData.shift].text} ${shiftColors[shiftData.shift].border} border shadow-lg ${shiftColors[shiftData.shift].glow}`
@@ -224,30 +247,30 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
         </span>
 
         {/* Mobile: Hafta navigatsiyasi */}
-        <div className="sm:hidden flex items-center justify-center gap-2">
+        <div className="sm:hidden flex items-center justify-center gap-3">
           <button
             onClick={goToPreviousWeek}
-            className="neo-button p-1.5 text-[var(--foreground)] hover:text-[var(--accent-primary)]"
+            className="neo-button p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--foreground)] hover:text-[var(--accent-primary)] active:scale-95 transition-transform"
             aria-label="Oldingi hafta"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </button>
           <button
             onClick={goToCurrentWeek}
             disabled={isCurrentWeek}
-            className={`px-3 py-1 rounded-lg neo-inset text-sm font-semibold gradient-text ${!isCurrentWeek ? 'active:scale-95' : ''}`}
+            className={`px-4 py-2.5 min-h-[44px] rounded-xl neo-inset text-sm font-semibold gradient-text transition-transform ${!isCurrentWeek ? 'active:scale-95' : ''}`}
           >
             {weekRange.start} - {weekRange.end}
-            {!isCurrentWeek && <span className="ml-1 text-xs text-[var(--accent-primary)]">↻</span>}
+            {!isCurrentWeek && <span className="ml-1.5 text-xs text-[var(--accent-primary)]">↻</span>}
           </button>
           <button
             onClick={goToNextWeek}
-            className="neo-button p-1.5 text-[var(--foreground)] hover:text-[var(--accent-primary)]"
+            className="neo-button p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center text-[var(--foreground)] hover:text-[var(--accent-primary)] active:scale-95 transition-transform"
             aria-label="Keyingi hafta"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
             </svg>
           </button>
@@ -255,13 +278,13 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
       </div>
 
       {/* Mobile: Kun tanlash */}
-      <div className="mobile-day-selector mb-2">
+      <div className="mobile-day-selector mb-2 px-1">
         {DAYS.map((day) => (
           <button
             key={day.value}
             onClick={() => setSelectedDay(day.value)}
             className={`
-              flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all
+              flex-shrink-0 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-all active:scale-95
               ${
                 selectedDay === day.value
                   ? 'gradient-primary text-white shadow-lg'
