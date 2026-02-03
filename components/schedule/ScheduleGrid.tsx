@@ -298,8 +298,10 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
       </div>
 
       {/* Tanlangan bo'lim jadvali */}
+      {/* [MO-03] key forces remount on shift/day change for animation re-trigger */}
       {currentShiftData && (
         <ShiftSection
+          key={`${currentShiftData.shift}-${selectedDay}`}
           shift={currentShiftData.shift}
           label={currentShiftData.label}
           times={currentShiftData.times}

@@ -118,10 +118,26 @@ body {
 
 /* ===== iOS26 LIQUID GLASS (MOBILE ONLY) ===== */
 @media (max-width: 640px) {
-  /* Mobile: optimized blur for performance */
+  /* Mobile: optimized blur with fallback */
   .glass {
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    /* Fallback for browsers without backdrop-filter */
+    background: rgba(255, 255, 255, 0.88);
+  }
+
+  .dark .glass {
+    background: rgba(17, 24, 39, 0.92);
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .glass {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dark .glass {
+      background: rgba(17, 24, 39, 0.78);
+    }
   }
 
   .glass-strong {
@@ -134,48 +150,103 @@ body {
     -webkit-backdrop-filter: blur(6px);
   }
 
-  /* iOS26 Specular highlight - subtle top edge glow */
+  /* [LG-02] Card depth - 2-layer shadow system */
+  .lesson-card.glass {
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.08),
+      0 8px 20px rgba(102, 126, 234, 0.15);
+  }
+
+  .dark .lesson-card.glass {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 1px 3px rgba(0, 0, 0, 0.2),
+      0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  /* [LG-01] iOS26 Specular highlight - VISIBLE top edge glow */
   .lesson-card::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
+    top: -1px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.7) 20%,
+      rgba(255, 255, 255, 0.9) 50%,
+      rgba(255, 255, 255, 0.7) 80%,
       transparent 100%
     );
-    border-radius: inherit;
+    border-radius: 2px;
     pointer-events: none;
+    z-index: 1;
   }
 
   .dark .lesson-card::before {
     background: linear-gradient(
       90deg,
       transparent 0%,
-      rgba(255, 255, 255, 0.08) 50%,
+      rgba(255, 255, 255, 0.12) 20%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.12) 80%,
       transparent 100%
     );
   }
 
-  /* Mobile optimized shadows - single layer */
+  /* [LG-01] Bottom edge subtle shadow line for depth */
+  .lesson-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    right: 12px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.06) 50%,
+      transparent 100%
+    );
+    border-radius: 1px;
+    pointer-events: none;
+  }
+
+  .dark .lesson-card::after {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(0, 0, 0, 0.2) 50%,
+      transparent 100%
+    );
+  }
+
+  /* Mobile optimized shadows for neo elements */
   .neo {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.06),
+      0 6px 16px rgba(0, 0, 0, 0.1);
   }
 
   .dark .neo {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.15),
+      0 6px 16px rgba(0, 0, 0, 0.35);
   }
 
   .neo-button {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.05),
+      0 4px 12px rgba(0, 0, 0, 0.08);
   }
 
   .dark .neo-button {
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.15),
+      0 4px 12px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -304,11 +375,11 @@ body {
     --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  /* Card entry animation - staggered fade + slide */
+  /* [MO-01] Card entry animation - staggered fade + slide */
   @keyframes mobile-card-enter {
     0% {
       opacity: 0;
-      transform: translateY(12px) scale(0.98);
+      transform: translateY(16px) scale(0.96);
     }
     100% {
       opacity: 1;
@@ -316,14 +387,17 @@ body {
     }
   }
 
-  .lesson-card {
-    animation: mobile-card-enter 0.35s var(--ease-out-expo) backwards;
+  /* Staggered animation using CSS variable from parent */
+  .mobile-card-row .lesson-card {
+    animation: mobile-card-enter 0.4s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--card-index, 0) * 80ms);
   }
 
-  /* Staggered delays for cards */
-  .lesson-card:nth-child(1) { animation-delay: 0ms; }
-  .lesson-card:nth-child(2) { animation-delay: 50ms; }
-  .lesson-card:nth-child(3) { animation-delay: 100ms; }
+  /* Also animate the time slot */
+  .mobile-card-row {
+    animation: mobile-card-enter 0.4s var(--ease-out-expo) backwards;
+    animation-delay: calc(var(--card-index, 0) * 80ms);
+  }
 
   /* Day pill tap feedback - spring bounce */
   @keyframes mobile-pill-tap {

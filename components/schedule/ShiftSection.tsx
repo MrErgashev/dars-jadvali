@@ -111,13 +111,17 @@ export default function ShiftSection({
       </div>
 
       {/* Mobile: Tanlangan kun bo'yicha */}
-      <div className="sm:hidden space-y-3">
-        {times.map((time) => {
+      <div className="sm:hidden mobile-cards-container space-y-3">
+        {times.map((time, index) => {
           const lesson = selectedDay
             ? getLesson(selectedDay, time.period)
             : null;
           return (
-            <div key={time.period} className="flex gap-3">
+            <div
+              key={time.period}
+              className="mobile-card-row flex gap-3"
+              style={{ '--card-index': index } as React.CSSProperties}
+            >
               {/* Vaqt */}
               <div className="flex flex-col items-center justify-center min-w-[60px]">
                 <span className="text-xs text-[var(--foreground-secondary)]">
