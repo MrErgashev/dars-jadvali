@@ -279,12 +279,12 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
 
       {/* Mobile: Kun tanlash - [MO-02] Sliding indicator */}
       <div className="mobile-day-selector mb-2">
-        {/* Sliding indicator - uses transform for smooth animation */}
+        {/* Sliding indicator - positioned with CSS calc */}
         <div
           className="day-pill-indicator rounded-xl gradient-primary shadow-lg"
           style={{
-            transform: `translateX(${DAYS.findIndex(d => d.value === selectedDay) * 76}px)`,
-          }}
+            '--day-index': DAYS.findIndex(d => d.value === selectedDay),
+          } as React.CSSProperties}
         />
         {DAYS.map((day) => (
           <button
@@ -300,7 +300,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
               }
             `}
           >
-            {day.label}
+            {day.shortLabel}
           </button>
         ))}
       </div>
