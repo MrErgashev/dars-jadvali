@@ -173,3 +173,97 @@ export async function clearAllLessons(): Promise<void> {
   const promises = snapshot.docs.map((docSnap) => deleteDoc(docSnap.ref));
   await Promise.all(promises);
 }
+
+// Hafta bo'yicha darslarni olish
+// Agar weekStart null bo'lsa, weekStart field'siz (legacy) darslarni oladi
+export async function getLessonsByWeek(weekStart: string | null): Promise<Lesson[]> {
+  const firestore = checkFirebase();
+
+  let q;
+  if (weekStart === null) {
+    // Legacy data (weekStart field'siz)
+    // Firebase'da "field mavjud emas" query qilish murakkab,
+    // shuning uchun barcha darslarni olib, client-side filter qilamiz
+    q = query(collection(firestore, SCHEDULES_COLLECTION));
+  } else {
+    q = query(
+      collection(firestore, SCHEDULES_COLLECTION),
+      where('weekStart', '==', weekStart)
+    );
+  }
+
+  const snapshot = await getDocs(q);
+
+  let lessons = snapshot.docs.map((docSnap) => ({
+    id: docSnap.id,
+    ...docSnap.data(),
+    updatedAt: docSnap.data().updatedAt?.toDate(),
+  })) as Lesson[];
+
+  // Legacy data uchun client-side filter
+  if (weekStart === null) {
+    lessons = lessons.filter((lesson) => !lesson.weekStart);
+  }
+
+  return lessons;
+}
+
+// Bir haftadan boshqa haftaga darslarni ko'chirish
+export async function copyLessonsToWeek(
+  sourceWeekStart: string | null, // null = legacy data (weekStart yo'q)
+  targetWeekStart: string
+): Promise<{ copied: number; skipped: number }> {
+  const firestore = checkFirebase();
+
+  // Manba haftasining darslarini olish
+  const sourceLessons = await getLessonsByWeek(sourceWeekStart);
+
+  if (sourceLessons.length === 0) {
+    return { copied: 0, skipped: 0 };
+  }
+
+  // Maqsad haftasida mavjud darslarni tekshirish (duplikatlarni oldini olish)
+  const targetLessons = await getLessonsByWeek(targetWeekStart);
+  const targetSlots = new Set(
+    targetLessons.map((l) => `${l.day}-${l.shift}-${l.period}`)
+  );
+
+  let copied = 0;
+  let skipped = 0;
+
+  const promises: Promise<void>[] = [];
+
+  for (const lesson of sourceLessons) {
+    const slotKey = `${lesson.day}-${lesson.shift}-${lesson.period}`;
+
+    if (targetSlots.has(slotKey)) {
+      // Bu slotda allaqachon dars bor
+      skipped++;
+      continue;
+    }
+
+    // Yangi dars yaratish (id'siz, weekStart bilan)
+    const newLesson = {
+      day: lesson.day,
+      shift: lesson.shift,
+      period: lesson.period,
+      subject: lesson.subject,
+      room: lesson.room,
+      teacher: lesson.teacher,
+      groups: lesson.groups,
+      type: lesson.type,
+      weekStart: targetWeekStart,
+      updatedAt: Timestamp.now(),
+    };
+
+    promises.push(
+      addDoc(collection(firestore, SCHEDULES_COLLECTION), newLesson).then(() => {
+        copied++;
+      })
+    );
+  }
+
+  await Promise.all(promises);
+
+  return { copied, skipped };
+}
