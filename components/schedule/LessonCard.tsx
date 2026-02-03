@@ -109,8 +109,23 @@ export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProp
 
   if (isEmpty || !lesson) {
     return (
-      <div className="glass-subtle rounded-xl p-3 min-h-[100px] flex items-center justify-center">
-        <span className="text-[var(--foreground-secondary)] text-sm">Bo'sh</span>
+      <div className="relative rounded-xl p-3 min-h-[100px] sm:min-h-[100px] min-h-[80px] flex flex-col items-center justify-center border-2 border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)]/30">
+        {/* Empty state icon */}
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth={1}
+          stroke="currentColor"
+          className="w-6 h-6 text-[var(--foreground-secondary)]/40 mb-1"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"
+          />
+        </svg>
+        <span className="text-[var(--foreground-secondary)]/60 text-xs font-medium">Bo'sh</span>
       </div>
     );
   }
@@ -301,14 +316,14 @@ export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProp
           <span className="truncate">{lesson.groups.join(', ')}</span>
         </div>
 
-        {/* Turi */}
+        {/* Turi - iOS26 pill badge with improved dark mode contrast */}
         <span
           className={`
-            inline-block px-2 py-0.5 rounded-full text-xs font-medium
-            ${lesson.type === "Ma'ruza" ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' : ''}
-            ${lesson.type === 'Amaliy' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : ''}
-            ${lesson.type === 'Seminar' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300' : ''}
-            ${lesson.type === 'Laboratoriya' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' : ''}
+            inline-block px-2.5 py-1 rounded-full text-xs font-semibold
+            ${lesson.type === "Ma'ruza" ? 'bg-blue-100 text-blue-800 dark:bg-blue-500/25 dark:text-blue-200' : ''}
+            ${lesson.type === 'Amaliy' ? 'bg-green-100 text-green-800 dark:bg-green-500/25 dark:text-green-200' : ''}
+            ${lesson.type === 'Seminar' ? 'bg-orange-100 text-orange-800 dark:bg-orange-500/25 dark:text-orange-200' : ''}
+            ${lesson.type === 'Laboratoriya' ? 'bg-purple-100 text-purple-800 dark:bg-purple-500/25 dark:text-purple-200' : ''}
           `}
         >
           {lesson.type}
