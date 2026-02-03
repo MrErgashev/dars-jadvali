@@ -109,7 +109,7 @@ export default function LessonCard({ lesson, isEmpty, onUpdate }: LessonCardProp
 
   if (isEmpty || !lesson) {
     return (
-      <div className="relative rounded-xl p-3 min-h-[100px] sm:min-h-[100px] min-h-[80px] flex flex-col items-center justify-center border-2 border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)]/30">
+      <div className="lesson-card-empty relative rounded-xl p-3 min-h-[100px] sm:min-h-[100px] min-h-[80px] flex flex-col items-center justify-center border-2 border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)]/30">
         {/* Empty state icon */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
