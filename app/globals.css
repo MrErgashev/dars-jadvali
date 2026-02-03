@@ -151,18 +151,24 @@ body {
   }
 
   /* [LG-02] Card depth - 2-layer shadow system */
+  /* [LG-04] Light mode: bright, airy feel */
   .lesson-card.glass {
-    border: 1px solid rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.08),
-      0 8px 20px rgba(102, 126, 234, 0.15);
+      0 1px 3px rgba(0, 0, 0, 0.06),
+      0 8px 24px rgba(102, 126, 234, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.8);
   }
 
+  /* [LG-04] Dark mode: deep, rich blacks with subtle glow */
   .dark .lesson-card.glass {
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(59, 130, 246, 0.12);
     box-shadow:
-      0 1px 3px rgba(0, 0, 0, 0.2),
-      0 8px 20px rgba(0, 0, 0, 0.35);
+      0 1px 4px rgba(0, 0, 0, 0.3),
+      0 8px 24px rgba(0, 0, 0, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
   }
 
   /* [LG-01] iOS26 Specular highlight - VISIBLE top edge glow */
@@ -222,6 +228,32 @@ body {
       rgba(0, 0, 0, 0.2) 50%,
       transparent 100%
     );
+  }
+
+  /* [LG-05] Badge glass effect - frosted pill badges */
+  .lesson-card span[class*="rounded-full"] {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .lesson-card span[class*="rounded-full"] {
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+
+  /* [LG-06] Empty state depth - subtle inset effect */
+  .lesson-card-empty,
+  .mobile-cards-container > div > div:has(.border-dashed) {
+    background: rgba(0, 0, 0, 0.02);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+  }
+
+  .dark .lesson-card-empty,
+  .dark .mobile-cards-container > div > div:has(.border-dashed) {
+    background: rgba(0, 0, 0, 0.15);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
   /* Mobile optimized shadows for neo elements */
@@ -399,15 +431,16 @@ body {
     animation-delay: calc(var(--card-index, 0) * 80ms);
   }
 
-  /* Day pill tap feedback - spring bounce */
+  /* [MO-05] Day pill tap feedback - enhanced spring bounce */
   @keyframes mobile-pill-tap {
-    0% { transform: scale(1); }
-    50% { transform: scale(0.92); }
-    100% { transform: scale(1); }
+    0% { transform: scale(1); opacity: 1; }
+    40% { transform: scale(0.88); opacity: 0.8; }
+    70% { transform: scale(1.02); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
   }
 
-  .mobile-day-selector button:active {
-    animation: mobile-pill-tap 0.2s var(--ease-spring);
+  .mobile-day-selector .day-pill-button:active {
+    animation: mobile-pill-tap 0.25s var(--ease-spring);
   }
 
   /* Tab content fade transition */
@@ -428,18 +461,25 @@ body {
     animation: mobile-content-fade 0.3s var(--ease-out-expo);
   }
 
-  /* Premium shimmer for skeleton */
+  /* [MO-06] Premium shimmer for skeleton - Apple-like shine */
   .skeleton {
     background: linear-gradient(
       105deg,
       var(--background-secondary) 0%,
-      var(--background-secondary) 40%,
-      color-mix(in srgb, var(--accent-primary) 15%, var(--background-secondary)) 50%,
-      var(--background-secondary) 60%,
+      var(--background-secondary) 35%,
+      color-mix(in srgb, var(--accent-primary) 20%, var(--background-secondary)) 45%,
+      rgba(255, 255, 255, 0.15) 50%,
+      color-mix(in srgb, var(--accent-primary) 20%, var(--background-secondary)) 55%,
+      var(--background-secondary) 65%,
       var(--background-secondary) 100%
     );
-    background-size: 300% 100%;
-    animation: shimmer 1.8s ease-in-out infinite;
+    background-size: 400% 100%;
+    animation: shimmer-premium 2s var(--ease-out-expo) infinite;
+  }
+
+  @keyframes shimmer-premium {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
   }
 
   /* Empty state subtle pulse */
@@ -459,9 +499,23 @@ body {
   }
 
   /* Week nav button press */
+  /* [MO-04] Enhanced active states - more visible feedback */
   .neo-button:active {
-    transform: scale(0.95);
-    transition: transform 0.1s var(--ease-spring);
+    transform: scale(0.94);
+    opacity: 0.85;
+    transition: transform 0.1s var(--ease-spring), opacity 0.1s ease;
+  }
+
+  /* Card press feedback */
+  .lesson-card:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+    transition: transform 0.15s var(--ease-spring), opacity 0.15s ease;
+  }
+
+  /* Shift tab active feedback */
+  button:active {
+    transform: scale(0.96);
   }
 }
 
@@ -606,15 +660,46 @@ body {
 @media (max-width: 640px) {
   .mobile-day-selector {
     display: flex;
-    overflow-x: auto;
-    gap: 8px;
-    padding: 8px 0;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
+    position: relative;
+    gap: 4px;
+    padding: 4px;
+    background: var(--background-secondary);
+    border-radius: 16px;
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.04),
+      0 4px 12px rgba(0, 0, 0, 0.06);
   }
 
-  .mobile-day-selector::-webkit-scrollbar {
-    display: none;
+  .dark .mobile-day-selector {
+    box-shadow:
+      0 2px 4px rgba(0, 0, 0, 0.1),
+      0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  /* [MO-02] Sliding indicator - absolute positioned for smooth transform animation */
+  .day-pill-indicator {
+    position: absolute;
+    top: 4px;
+    bottom: 4px;
+    width: calc((100% - 8px - 16px) / 5); /* container padding - gaps / 5 days */
+    left: 4px;
+    transition: transform 0.35s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Day pill buttons */
+  .day-pill-button {
+    flex: 1;
+    text-align: center;
+    white-space: nowrap;
+    font-weight: 600;
+    position: relative;
+    z-index: 1;
+  }
+
+  .day-pill-button:active {
+    transform: scale(0.96);
   }
 }
 

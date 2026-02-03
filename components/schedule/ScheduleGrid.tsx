@@ -277,18 +277,26 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
         </div>
       </div>
 
-      {/* Mobile: Kun tanlash */}
-      <div className="mobile-day-selector mb-2 px-1">
+      {/* Mobile: Kun tanlash - [MO-02] Sliding indicator */}
+      <div className="mobile-day-selector mb-2">
+        {/* Sliding indicator - uses transform for smooth animation */}
+        <div
+          className="day-pill-indicator rounded-xl gradient-primary shadow-lg"
+          style={{
+            transform: `translateX(calc(${DAYS.findIndex(d => d.value === selectedDay)} * (100% + 4px)))`,
+          }}
+        />
         {DAYS.map((day) => (
           <button
             key={day.value}
             onClick={() => setSelectedDay(day.value)}
             className={`
-              flex-shrink-0 px-4 py-2.5 min-h-[44px] rounded-xl text-sm font-medium transition-all active:scale-95
+              day-pill-button min-h-[44px] rounded-xl text-sm
+              transition-colors duration-200
               ${
                 selectedDay === day.value
-                  ? 'gradient-primary text-white shadow-lg'
-                  : 'neo-button text-[var(--foreground)]'
+                  ? 'text-white font-bold'
+                  : 'text-[var(--foreground)] hover:text-[var(--foreground)]'
               }
             `}
           >
