@@ -116,6 +116,69 @@ body {
   border: 1px solid var(--glass-border);
 }
 
+/* ===== iOS26 LIQUID GLASS (MOBILE ONLY) ===== */
+@media (max-width: 640px) {
+  /* Mobile: optimized blur for performance */
+  .glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .glass-strong {
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .glass-subtle {
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+
+  /* iOS26 Specular highlight - subtle top edge glow */
+  .lesson-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      transparent 100%
+    );
+    border-radius: inherit;
+    pointer-events: none;
+  }
+
+  .dark .lesson-card::before {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 100%
+    );
+  }
+
+  /* Mobile optimized shadows - single layer */
+  .neo {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  .dark .neo {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .neo-button {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+
+  .dark .neo-button {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  }
+}
+
 /* ===== NEOMORPHISM UTILITIES ===== */
 .neo {
   background: var(--background-secondary);
