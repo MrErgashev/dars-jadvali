@@ -1,12 +1,12 @@
 import { Day, Shift, LessonType, ShiftSchedule } from './types';
 
 // Kunlar
-export const DAYS: { value: Day; label: string }[] = [
-  { value: 'dushanba', label: 'Dushanba' },
-  { value: 'seshanba', label: 'Seshanba' },
-  { value: 'chorshanba', label: 'Chorshanba' },
-  { value: 'payshanba', label: 'Payshanba' },
-  { value: 'juma', label: 'Juma' },
+export const DAYS: { value: Day; label: string; shortLabel: string }[] = [
+  { value: 'dushanba', label: 'Dushanba', shortLabel: 'Du' },
+  { value: 'seshanba', label: 'Seshanba', shortLabel: 'Se' },
+  { value: 'chorshanba', label: 'Chorshanba', shortLabel: 'Ch' },
+  { value: 'payshanba', label: 'Payshanba', shortLabel: 'Pa' },
+  { value: 'juma', label: 'Juma', shortLabel: 'Ju' },
 ];
 
 // Bo'limlar va vaqtlar
