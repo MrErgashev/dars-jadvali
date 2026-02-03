@@ -283,7 +283,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
         <div
           className="day-pill-indicator rounded-xl gradient-primary shadow-lg"
           style={{
-            transform: `translateX(calc(${DAYS.findIndex(d => d.value === selectedDay)} * (100% + 4px)))`,
+            transform: `translateX(${DAYS.findIndex(d => d.value === selectedDay) * 76}px)`,
           }}
         />
         {DAYS.map((day) => (
@@ -291,7 +291,7 @@ export default function ScheduleGrid({ lessons, isLoading, onUpdate }: ScheduleG
             key={day.value}
             onClick={() => setSelectedDay(day.value)}
             className={`
-              day-pill-button min-h-[44px] rounded-xl text-sm
+              day-pill-button min-h-[44px] rounded-xl
               transition-colors duration-200
               ${
                 selectedDay === day.value

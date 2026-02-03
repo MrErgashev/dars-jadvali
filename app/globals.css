@@ -668,6 +668,14 @@ body {
     box-shadow:
       0 2px 4px rgba(0, 0, 0, 0.04),
       0 4px 12px rgba(0, 0, 0, 0.06);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .mobile-day-selector::-webkit-scrollbar {
+    display: none;
   }
 
   .dark .mobile-day-selector {
@@ -681,7 +689,7 @@ body {
     position: absolute;
     top: 4px;
     bottom: 4px;
-    width: calc((100% - 8px - 16px) / 5); /* container padding - gaps / 5 days */
+    width: 72px;
     left: 4px;
     transition: transform 0.35s var(--ease-spring, cubic-bezier(0.34, 1.56, 0.64, 1));
     pointer-events: none;
@@ -690,10 +698,13 @@ body {
 
   /* Day pill buttons */
   .day-pill-button {
-    flex: 1;
+    flex-shrink: 0;
+    min-width: 72px;
+    padding: 0 12px;
     text-align: center;
     white-space: nowrap;
     font-weight: 600;
+    font-size: 13px;
     position: relative;
     z-index: 1;
   }
