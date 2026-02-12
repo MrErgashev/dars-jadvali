@@ -1,5 +1,5 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
-import { getFirestore, Firestore } from 'firebase/firestore';
+import { getFirestore, Firestore, enableIndexedDbPersistence } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 
 // Firebase konfiguratsiya
@@ -30,6 +30,20 @@ if (isConfigured) {
   // Firestore va Auth
   db = getFirestore(app);
   auth = getAuth(app);
+
+  // Offline persistence - ma'lumotlarni IndexedDB'da saqlash
+  // Internet yo'q bo'lganda oxirgi yuklangan ma'lumotlar ko'rinadi
+  if (typeof window !== 'undefined') {
+    enableIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        // Bir nechta tab ochiq - faqat bittasida ishlaydi
+        console.warn('Firestore offline persistence: faqat bitta tabda ishlaydi');
+      } else if (err.code === 'unimplemented') {
+        // Browser qo'llab-quvvatlamaydi
+        console.warn('Firestore offline persistence: browser qo\'llab-quvvatlamaydi');
+      }
+    });
+  }
 }
 
 export { db, auth, isConfigured };
