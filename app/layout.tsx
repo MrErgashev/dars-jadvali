@@ -4,6 +4,8 @@ import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { AuthProvider } from '@/context/AuthContext';
 import { WeekProvider } from '@/context/WeekContext';
+import ServiceWorkerRegister from '@/components/ServiceWorkerRegister';
+import OfflineIndicator from '@/components/OfflineIndicator';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -33,6 +35,8 @@ export default function RootLayout({
           <AuthProvider>
             <WeekProvider>
               {children}
+              <OfflineIndicator />
+              <ServiceWorkerRegister />
             </WeekProvider>
           </AuthProvider>
         </ThemeProvider>
