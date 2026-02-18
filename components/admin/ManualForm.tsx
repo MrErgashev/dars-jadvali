@@ -11,9 +11,10 @@ import Select from '@/components/ui/Select';
 interface ManualFormProps {
   editingLesson: Lesson | null;
   onSuccess: () => void;
+  weekStartISO: string;
 }
 
-export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps) {
+export default function ManualForm({ editingLesson, onSuccess, weekStartISO }: ManualFormProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -90,6 +91,7 @@ export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps
         teacher,
         groups: groupsArray,
         type,
+        weekStart: weekStartISO,
       });
 
       setSuccess("Dars muvaffaqiyatli saqlandi!");
@@ -156,6 +158,7 @@ export default function ManualForm({ editingLesson, onSuccess }: ManualFormProps
           teacher,
           groups: groupsArray,
           type,
+          weekStart: weekStartISO,
         });
       }
 
