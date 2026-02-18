@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import { useWeek } from '@/context/WeekContext';
 import { useSchedule } from '@/hooks/useSchedule';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -18,7 +19,8 @@ type EditMode = 'manual' | 'voice';
 export default function AdminPage() {
   const router = useRouter();
   const { user, loading: authLoading, signOut } = useAuth();
-  const { lessons, loading: lessonsLoading, refresh } = useSchedule();
+  const { weekStartISO } = useWeek();
+  const { lessons, loading: lessonsLoading, refresh } = useSchedule({ weekStartISO });
 
   const [editMode, setEditMode] = useState<EditMode>('manual');
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
@@ -226,9 +228,10 @@ export default function AdminPage() {
                 <ManualForm
                   editingLesson={editingLesson}
                   onSuccess={handleNewLesson}
+                  weekStartISO={weekStartISO}
                 />
               ) : (
-                <VoiceInput onSuccess={handleNewLesson} />
+                <VoiceInput onSuccess={handleNewLesson} weekStartISO={weekStartISO} />
               )}
             </Card>
           </div>

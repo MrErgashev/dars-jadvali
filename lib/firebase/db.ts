@@ -57,15 +57,19 @@ export async function getLessonsByDay(day: Day): Promise<Lesson[]> {
 export async function getLesson(
   day: Day,
   shift: Shift,
-  period: number
+  period: number,
+  weekStart?: string
 ): Promise<Lesson | null> {
   const firestore = checkFirebase();
-  const q = query(
-    collection(firestore, SCHEDULES_COLLECTION),
+  const constraints = [
     where('day', '==', day),
     where('shift', '==', shift),
-    where('period', '==', period)
-  );
+    where('period', '==', period),
+  ];
+  if (weekStart) {
+    constraints.push(where('weekStart', '==', weekStart));
+  }
+  const q = query(collection(firestore, SCHEDULES_COLLECTION), ...constraints);
   const snapshot = await getDocs(q);
 
   if (snapshot.empty) return null;
@@ -91,7 +95,7 @@ export async function saveLesson(lesson: Omit<Lesson, 'updatedAt'>): Promise<str
 
   if (id) {
     // Aniq darsni ID orqali yangilash
-    const existingAtTime = await getLesson(lesson.day, lesson.shift, lesson.period);
+    const existingAtTime = await getLesson(lesson.day, lesson.shift, lesson.period, lesson.weekStart);
     if (existingAtTime?.id && existingAtTime.id !== id) {
       throw new Error("Tanlangan vaqtda boshqa dars mavjud");
     }
@@ -101,7 +105,7 @@ export async function saveLesson(lesson: Omit<Lesson, 'updatedAt'>): Promise<str
   }
 
   // Avval mavjud darsni vaqt bo'yicha tekshirish
-  const existing = await getLesson(lesson.day, lesson.shift, lesson.period);
+  const existing = await getLesson(lesson.day, lesson.shift, lesson.period, lesson.weekStart);
   if (existing?.id) {
     await updateDoc(doc(firestore, SCHEDULES_COLLECTION, existing.id), lessonData);
     return existing.id;

@@ -117,7 +117,7 @@ export default function Home() {
                   </Button>
                 </div>
 
-                <VoiceInput onSuccess={refresh} compact />
+                <VoiceInput onSuccess={refresh} compact weekStartISO={weekStartISO} />
               </Card>
             )}
           </>

@@ -18,9 +18,10 @@ type TranscriptCandidate = {
 interface VoiceInputProps {
   onSuccess: () => void;
   compact?: boolean;
+  weekStartISO: string;
 }
 
-export default function VoiceInput({ onSuccess, compact = false }: VoiceInputProps) {
+export default function VoiceInput({ onSuccess, compact = false, weekStartISO }: VoiceInputProps) {
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
@@ -170,6 +171,7 @@ export default function VoiceInput({ onSuccess, compact = false }: VoiceInputPro
         teacher: parsedResult.teacher as string,
         groups: parsedResult.groups as string[],
         type: parsedResult.type as LessonType,
+        weekStart: weekStartISO,
       });
 
       setSuccess("Dars muvaffaqiyatli saqlandi!");
