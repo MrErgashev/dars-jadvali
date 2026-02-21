@@ -81,7 +81,11 @@ export function parseVoiceCommand(text: string): ParsedVoiceCommand {
     'para', 'paraga', 'пара',
     'birinchi', 'ikkinchi', 'uchinchi',
     'первая', 'вторая', 'третья', 'первый', 'второй', 'третий',
-    'first', 'second', 'third',
+    'first', 'second', 'third', 'fourth',
+    // English filler words (translate funksiyasi olib tashlaydi, lekin agar qolsa)
+    'period', 'class', 'lesson', 'room', 'teacher', 'group', 'groups',
+    'subject', 'the', 'a', 'an', 'in', 'at', 'for', 'and', 'with', 'of', 'to', 'is',
+    '1st', '2nd', '3rd', '4th',
   ];
 
   // Fan nomi va o'qituvchi ismini ajratish

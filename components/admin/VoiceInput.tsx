@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { speechRecognition } from '@/lib/voice/speechRecognition';
 import { parseVoiceCommand } from '@/lib/voice/parser';
+import { translateToUzbek, hasEnglishTerms, VOICE_LANGUAGES, VoiceLanguage } from '@/lib/voice/translate';
 import { ParsedVoiceCommand, Day, Shift, LessonType } from '@/lib/types';
 import { saveLesson } from '@/lib/firebase/db';
 import Button from '@/components/ui/Button';
@@ -25,27 +26,61 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
   const [isSupported, setIsSupported] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
+  const [translatedText, setTranslatedText] = useState<string | null>(null);
   const [textInput, setTextInput] = useState('');
   const [parsedResult, setParsedResult] = useState<ParsedVoiceCommand | null>(null);
   const [candidates, setCandidates] = useState<TranscriptCandidate[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [voiceLang, setVoiceLang] = useState<VoiceLanguage>('en');
 
-  // Browser support check - barcha qurilmalarda sinab ko'ramiz
+  // Browser support check
   useEffect(() => {
     setIsSupported(speechRecognition.isSupported());
   }, []);
+
+  /**
+   * Matnni tarjima qilish va parse qilish
+   * Inglizcha bo'lsa avval translateToUzbek() orqali o'tkaziladi
+   */
+  const parseWithTranslation = useCallback((text: string): { parsed: ParsedVoiceCommand; translated: string | null } => {
+    let textForParsing = text;
+    let translated: string | null = null;
+
+    // Inglizcha so'zlar bor bo'lsa, avval tarjima qilish
+    if (voiceLang === 'en' || hasEnglishTerms(text)) {
+      const translatedResult = translateToUzbek(text);
+      if (translatedResult !== text) {
+        translated = translatedResult;
+        textForParsing = translatedResult;
+      }
+    }
+
+    const parsed = parseVoiceCommand(textForParsing);
+    return { parsed, translated };
+  }, [voiceLang]);
 
   const startListening = () => {
     setError(null);
     setSuccess(null);
     setTranscript('');
+    setTranslatedText(null);
     setParsedResult(null);
     setCandidates([]);
 
+    const selectedLang = VOICE_LANGUAGES.find((l) => l.code === voiceLang);
+    const speechLang = selectedLang?.speechLang || 'en-US';
+
+    // Til fallback'lari
+    const languageFallbacks = voiceLang === 'en'
+      ? ['en-US', 'en-GB']
+      : voiceLang === 'ru'
+        ? ['ru-RU']
+        : ['uz-UZ', 'tr-TR', 'ru-RU'];
+
     const started = speechRecognition.start({
-      languages: ['uz-UZ', 'ru-RU', 'tr-TR'],
+      languages: [speechLang, ...languageFallbacks],
       continuous: false,
       interimResults: true,
       maxAlternatives: 3,
@@ -72,12 +107,12 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
           const addCandidate = (candidateText: string, confidence?: number) => {
             const normalized = candidateText.trim().replace(/\s+/g, ' ');
             if (!normalized) return;
-            const parsed = parseVoiceCommand(normalized);
+            const { parsed, translated } = parseWithTranslation(normalized);
             const score = scoreParsed(parsed);
             const existing = mergedCandidates.get(normalized);
             if (!existing || score > existing.score) {
               mergedCandidates.set(normalized, {
-                text: normalized,
+                text: translated || normalized,
                 confidence,
                 score,
                 parsed,
@@ -97,14 +132,19 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
           const bestCandidate = topCandidates[0];
 
           if (bestCandidate) {
-            setTranscript(bestCandidate.text);
+            setTranscript(normalizedPrimary);
             setTextInput(bestCandidate.text);
             setParsedResult(bestCandidate.parsed);
+            // Tarjima bo'lgan bo'lsa ko'rsatish
+            if (bestCandidate.text !== normalizedPrimary) {
+              setTranslatedText(bestCandidate.text);
+            }
           } else {
             setTranscript(normalizedPrimary);
             setTextInput(normalizedPrimary);
-            const parsed = parseVoiceCommand(normalizedPrimary);
+            const { parsed, translated } = parseWithTranslation(normalizedPrimary);
             setParsedResult(parsed);
+            setTranslatedText(translated);
           }
 
           setCandidates(topCandidates);
@@ -131,10 +171,12 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
   const handleTextChange = (text: string) => {
     setTextInput(text);
     setTranscript(text);
+    setTranslatedText(null);
     setCandidates([]);
     if (text.trim().length > 10) {
-      const parsed = parseVoiceCommand(text);
+      const { parsed, translated } = parseWithTranslation(text);
       setParsedResult(parsed);
+      setTranslatedText(translated);
     } else {
       setParsedResult(null);
     }
@@ -147,8 +189,9 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
       return;
     }
     setError(null);
-    const parsed = parseVoiceCommand(textInput);
+    const { parsed, translated } = parseWithTranslation(textInput);
     setParsedResult(parsed);
+    setTranslatedText(translated);
     setCandidates([]);
   };
 
@@ -177,6 +220,7 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
       setSuccess("Dars muvaffaqiyatli saqlandi!");
       setTranscript('');
       setTextInput('');
+      setTranslatedText(null);
       setParsedResult(null);
       onSuccess();
 
@@ -191,6 +235,7 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
   const handleReset = () => {
     setTranscript('');
     setTextInput('');
+    setTranslatedText(null);
     setParsedResult(null);
     setCandidates([]);
     setError(null);
@@ -200,9 +245,17 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
   const handleCandidateSelect = (candidate: TranscriptCandidate) => {
     setTextInput(candidate.text);
     setTranscript(candidate.text);
+    setTranslatedText(null);
     setParsedResult(candidate.parsed);
     setError(null);
   };
+
+  const currentLang = VOICE_LANGUAGES.find((l) => l.code === voiceLang);
+  const exampleText = voiceLang === 'en'
+    ? 'Monday morning first period Mathematics JM403 JM403 JM405 Karimov lecture'
+    : voiceLang === 'ru'
+      ? 'Понедельник утренний 1-пара Математика JM403 JM403 JM405 Каримов лекция'
+      : 'Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma\'ruza';
 
   return (
     <div>
@@ -210,6 +263,37 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
         <h2 className="text-xl font-bold text-[var(--foreground)] mb-6">
           Tez kiritish (Ovoz / Matn)
         </h2>
+      )}
+
+      {/* Ovoz tili tanlash */}
+      {isSupported && (
+        <div className="mb-4">
+          <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-2">
+            Ovoz tili:
+          </div>
+          <div className="flex gap-2">
+            {VOICE_LANGUAGES.map((lang) => (
+              <button
+                key={lang.code}
+                type="button"
+                onClick={() => setVoiceLang(lang.code)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  voiceLang === lang.code
+                    ? 'bg-[var(--accent-primary)] text-white'
+                    : 'bg-[var(--background-secondary)] text-[var(--foreground-secondary)] hover:text-[var(--foreground)]'
+                }`}
+                disabled={isListening}
+              >
+                {lang.label}
+              </button>
+            ))}
+          </div>
+          {voiceLang === 'en' && (
+            <p className="text-xs text-[var(--accent-primary)] mt-1.5">
+              Inglizcha gapiring — avtomatik tarjima qilinadi
+            </p>
+          )}
+        </div>
       )}
 
       {/* Instructions */}
@@ -220,10 +304,12 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
           </summary>
           <Card variant="flat" className="p-4 mt-3">
             <p className="text-sm text-[var(--foreground-secondary)] mb-2">
-              [Kun] [Bo'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O'qituvchi] [Turi]
+              {voiceLang === 'en'
+                ? '[Day] [Shift] [Period] period [Subject] [Room] [Groups] [Teacher] [Type]'
+                : '[Kun] [Bo\'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O\'qituvchi] [Turi]'}
             </p>
             <p className="text-sm text-[var(--accent-primary)]">
-              Misol: Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza
+              {voiceLang === 'en' ? 'Example' : 'Misol'}: {exampleText}
             </p>
           </Card>
         </details>
@@ -233,10 +319,12 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
             Buyruq formati:
           </h3>
           <p className="text-sm text-[var(--foreground-secondary)] mb-2">
-            [Kun] [Bo'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O'qituvchi] [Turi]
+            {voiceLang === 'en'
+              ? '[Day] [Shift] [Period] period [Subject] [Room] [Groups] [Teacher] [Type]'
+              : '[Kun] [Bo\'lim] [Para]-para [Fan nomi] [Xona] [Guruhlar] [O\'qituvchi] [Turi]'}
           </p>
           <p className="text-sm text-[var(--accent-primary)]">
-            Misol: Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza
+            {voiceLang === 'en' ? 'Example' : 'Misol'}: {exampleText}
           </p>
         </Card>
       )}
@@ -261,12 +349,26 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
         </div>
       )}
 
+      {/* Tarjima natijasi (inglizchadan o'zbekchaga) */}
+      {translatedText && transcript && translatedText !== transcript && (
+        <Card variant="flat" className="p-3 mb-4">
+          <div className="text-xs font-semibold text-[var(--foreground-secondary)] mb-1">
+            Aniqlangan matn:
+          </div>
+          <div className="text-sm text-[var(--foreground)] mb-2">{transcript}</div>
+          <div className="text-xs font-semibold text-[var(--accent-primary)] mb-1">
+            Tarjima:
+          </div>
+          <div className="text-sm text-[var(--foreground)]">{translatedText}</div>
+        </Card>
+      )}
+
       {/* Matn input */}
       <div className="mb-4">
         <textarea
           value={textInput}
           onChange={(e) => handleTextChange(e.target.value)}
-          placeholder="Dushanba kunduzgi 1-para Matematika JM403 JM403 JM405 Karimov ma'ruza"
+          placeholder={exampleText}
           className={`input-glass w-full resize-none ${compact ? 'min-h-[80px]' : 'min-h-[100px]'}`}
           rows={3}
         />
@@ -330,7 +432,7 @@ export default function VoiceInput({ onSuccess, compact = false, weekStartISO }:
                 d="M12 18.75a6 6 0 0 0 6-6v-1.5m-6 7.5a6 6 0 0 1-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 0 1-3-3V4.5a3 3 0 1 1 6 0v8.25a3 3 0 0 1-3 3Z"
               />
             </svg>
-            {isListening ? 'To\'xtat' : 'Ovoz'}
+            {isListening ? 'To\'xtat' : `Ovoz (${currentLang?.label || "O'zbekcha"})`}
           </button>
         )}
 
