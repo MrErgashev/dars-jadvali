@@ -42,28 +42,28 @@ export const SHIFTS: ShiftSchedule[] = [
 // Dars turlari
 export const LESSON_TYPES: LessonType[] = ["Ma'ruza", 'Amaliy', 'Seminar', 'Laboratoriya'];
 
-// Bo'lim nomlari (parser uchun) - O'zbek + Rus
+// Bo'lim nomlari (parser uchun) - O'zbek + Rus + English
 export const SHIFT_NAMES: Record<Shift, string[]> = {
-  kunduzgi: ['kunduzgi', 'kunduzi', 'ertalab', 'дневной', 'дневное', 'утро', 'утренний'],
-  sirtqi: ['sirtqi', 'tushdan keyin', 'tushlik', 'заочный', 'заочное', 'дневной после обеда'],
-  kechki: ['kechki', 'kechqurun', 'oqshom', 'вечерний', 'вечернее', 'вечер'],
+  kunduzgi: ['kunduzgi', 'kunduzi', 'ertalab', 'дневной', 'дневное', 'утро', 'утренний', 'morning', 'daytime'],
+  sirtqi: ['sirtqi', 'tushdan keyin', 'tushlik', 'заочный', 'заочное', 'дневной после обеда', 'afternoon', 'external'],
+  kechki: ['kechki', 'kechqurun', 'oqshom', 'вечерний', 'вечернее', 'вечер', 'evening', 'night'],
 };
 
-// Kun nomlari (parser uchun) - O'zbek + Rus
+// Kun nomlari (parser uchun) - O'zbek + Rus + English
 export const DAY_NAMES: Record<Day, string[]> = {
-  dushanba: ['dushanba', 'dushanbaga', 'понедельник', 'monday'],
-  seshanba: ['seshanba', 'seshanbaga', 'вторник', 'tuesday'],
-  chorshanba: ['chorshanba', 'chorshanbaga', 'среда', 'wednesday'],
-  payshanba: ['payshanba', 'payshanbaga', 'четверг', 'thursday'],
-  juma: ['juma', 'jumaga', 'пятница', 'friday'],
+  dushanba: ['dushanba', 'dushanbaga', 'понедельник', 'monday', 'mon'],
+  seshanba: ['seshanba', 'seshanbaga', 'вторник', 'tuesday', 'tue', 'tues'],
+  chorshanba: ['chorshanba', 'chorshanbaga', 'среда', 'wednesday', 'wed'],
+  payshanba: ['payshanba', 'payshanbaga', 'четверг', 'thursday', 'thu', 'thurs'],
+  juma: ['juma', 'jumaga', 'пятница', 'friday', 'fri'],
 };
 
-// Dars turi nomlari (parser uchun) - O'zbek + Rus
+// Dars turi nomlari (parser uchun) - O'zbek + Rus + English
 export const LESSON_TYPE_NAMES: Record<LessonType, string[]> = {
-  "Ma'ruza": ["ma'ruza", 'maruza', 'leksiya', 'лекция', 'lecture'],
-  Amaliy: ['amaliy', 'amaliyot', 'praktika', 'практика', 'практический', 'practical'],
-  Seminar: ['seminar', 'seminari', 'семинар', 'seminar'],
-  Laboratoriya: ['laboratoriya', 'lab', 'labaratoriya', 'лаборатория', 'лабораторная', 'laboratory'],
+  "Ma'ruza": ["ma'ruza", 'maruza', 'leksiya', 'лекция', 'lecture', 'lectures'],
+  Amaliy: ['amaliy', 'amaliyot', 'praktika', 'практика', 'практический', 'practical', 'practice', 'practicals'],
+  Seminar: ['seminar', 'seminari', 'семинар', 'seminar', 'seminars'],
+  Laboratoriya: ['laboratoriya', 'lab', 'labaratoriya', 'лаборатория', 'лабораторная', 'laboratory', 'labs'],
 };
 
 // Para raqamlari
